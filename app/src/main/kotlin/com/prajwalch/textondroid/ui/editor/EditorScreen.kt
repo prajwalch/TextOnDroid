@@ -3,7 +3,6 @@ package com.prajwalch.textondroid.ui.editor
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,12 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import com.prajwalch.textondroid.R
 
+import org.koin.androidx.compose.koinViewModel
+
 @Composable
-fun EditorScreen(onNavigateToSettings: () -> Unit, modifier: Modifier = Modifier) {
-    val textFieldState = rememberTextFieldState("")
+fun EditorScreen(
+    onNavigateToSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: EditorViewModel = koinViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier
@@ -36,8 +42,8 @@ fun EditorScreen(onNavigateToSettings: () -> Unit, modifier: Modifier = Modifier
             .then(modifier),
         topBar = {
             EditorScreenTopBar(
-                title = "Untitled document",
-                onSave = {},
+                title = uiState.fileName,
+                onSave = viewModel::save,
                 onUndo = {},
                 onRedo = {},
                 onFind = {},
@@ -50,7 +56,8 @@ fun EditorScreen(onNavigateToSettings: () -> Unit, modifier: Modifier = Modifier
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
-            state = textFieldState,
+            value = uiState.content,
+            onValueChange = viewModel::updateContent,
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,

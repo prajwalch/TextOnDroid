@@ -5,22 +5,21 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
 import com.prajwalch.textondroid.ui.editor.EditorScreen
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-private object Editor
+private data class Editor(val documentUri: String? = null)
 
 @Composable
-fun TextOnDroidApp(modifier: Modifier = Modifier) {
+fun TextOnDroidApp(documentUri: String?, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
     NavHost(
         modifier = modifier,
         navController = navController,
-        startDestination = Editor,
+        startDestination = Editor(documentUri = documentUri),
     ) {
         composable<Editor> {
             EditorScreen(onNavigateToSettings = {})
