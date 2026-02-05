@@ -1,12 +1,10 @@
 package com.prajwalch.textondroid.ui.editor
 
-import android.app.Application
 import android.content.ContentResolver
 import android.net.Uri
 
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.application
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import kotlinx.coroutines.Dispatchers
@@ -26,20 +24,18 @@ data class EditorUiState(
 
 /** ViewModel which handles the business logic of core text editor. */
 class EditorViewModel(
-    application: Application,
+    /**
+     * [ContentResolver] for underlying file handling.
+     */
+    private val contentResolver: ContentResolver,
     savedStateHandle: SavedStateHandle,
-) : AndroidViewModel(application) {
+) : ViewModel() {
     /**
      * Uri of a document to edit.
      *
      * If it's `null`, an empty buffered document is created.
      */
     private val documentUri = savedStateHandle.get<String>("documentUri")?.let(Uri::parse)
-
-    /**
-     * [android.content.ContentResolver] for underlying file handling.
-     */
-    private val contentResolver get() = application.contentResolver
 
     /** Current UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())

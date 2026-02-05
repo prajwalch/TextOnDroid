@@ -2,6 +2,7 @@ package com.prajwalch.textondroid
 
 import android.app.Application
 
+import com.prajwalch.textondroid.di.appModule
 import com.prajwalch.textondroid.di.viewModelModule
 
 import org.koin.android.ext.koin.androidContext
@@ -17,7 +18,7 @@ class TextOnDroidApplication : Application() {
         startKoin {
             androidContext(this@TextOnDroidApplication)
             androidLogger()
-            modules(viewModelModule)
+            modules(appModule, viewModelModule)
         }
 
         if (BuildConfig.DEBUG) {
