@@ -2,6 +2,7 @@ package com.prajwalch.textondroid.ui.editor
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.provider.OpenableColumns
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -45,6 +46,9 @@ class EditorViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             if (documentUri == null) return@launch
 
+            contentResolver.getDisplayName(documentUri)?.let { displayName ->
+                _uiState.update { it.copy(fileName = displayName) }
+            }
             contentResolver.openBufferedReader(documentUri)?.use { contentReader ->
                 val content = contentReader.readText()
                 _uiState.update { it.copy(content = content) }
@@ -80,5 +84,29 @@ class EditorViewModel(
         charset: Charset = Charsets.UTF_8,
     ): BufferedWriter? {
         return this.openOutputStream(uri)?.bufferedWriter(charset = charset)
+    }
+
+    private fun ContentResolver.getDisplayName(uri: Uri): String? {
+        val cursor = this.query(
+            /* uri = */
+            uri,
+            /* projection = */
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            /* selection = */
+            null,
+            /* selectionArgs = */
+            null,
+            /* sortOrder = */
+            null,
+            /* cancellationSignal = */
+            null,
+        ) ?: return null
+
+        return cursor.use {
+            if (!it.moveToFirst()) return@use null
+
+            val displayNameColumnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (displayNameColumnIndex != -1) it.getString(displayNameColumnIndex) else null
+        }
     }
 }
