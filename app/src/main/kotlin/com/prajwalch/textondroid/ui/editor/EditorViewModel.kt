@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 
+import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,30 +14,24 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.nio.charset.Charset
 
 data class EditorUiState(
-    val fileName: String = "Untitled",
+    val fileName: String? = null,
     val content: String = "",
 )
 
 /** ViewModel which handles the business logic of core text editor. */
 class EditorViewModel(
-    /**
-     * [ContentResolver] for underlying file handling.
-     */
     private val contentResolver: ContentResolver,
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    /**
-     * Uri of a document to edit.
-     *
-     * If it's `null`, an empty buffered document is created.
-     */
-    private val documentUri = savedStateHandle.get<String>("documentUri")?.let(Uri::parse)
+    /** Uri of a document. */
+    private val documentUri get() = savedStateHandle.get<String>(DOCUMENT_URI_KEY)?.toUri()
 
     /** Current UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())
@@ -44,15 +39,24 @@ class EditorViewModel(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            if (documentUri == null) return@launch
+            val documentUri = documentUri ?: return@launch
 
-            contentResolver.getDisplayName(documentUri)?.let { displayName ->
-                _uiState.update { it.copy(fileName = displayName) }
-            }
+            val fileName = contentResolver.getDisplayName(documentUri)
+            _uiState.update { it.copy(fileName = fileName) }
+
             contentResolver.openBufferedReader(documentUri)?.use { contentReader ->
-                val content = contentReader.readText()
-                _uiState.update { it.copy(content = content) }
+                updateContent(content = contentReader.readText())
             }
+        }
+    }
+
+    /** Updates the URI of a document to operate on. */
+    fun updateDocumentUri(uri: Uri) {
+        viewModelScope.launch {
+            savedStateHandle[DOCUMENT_URI_KEY] = uri.toString()
+
+            val fileName = withContext(Dispatchers.IO) { contentResolver.getDisplayName(uri) }
+            _uiState.update { it.copy(fileName = fileName) }
         }
     }
 
@@ -64,7 +68,7 @@ class EditorViewModel(
     /** Saves the current document. */
     fun save() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (documentUri == null) return@launch
+            val documentUri = documentUri ?: return@launch
 
             contentResolver.openBufferedWriter(documentUri)?.use {
                 it.write(_uiState.value.content)
@@ -72,41 +76,45 @@ class EditorViewModel(
         }
     }
 
-    private fun ContentResolver.openBufferedReader(
-        uri: Uri,
-        charset: Charset = Charsets.UTF_8,
-    ): BufferedReader? {
-        return this.openInputStream(uri)?.bufferedReader(charset = charset)
+    private companion object {
+        private const val DOCUMENT_URI_KEY = "documentUri"
     }
+}
 
-    private fun ContentResolver.openBufferedWriter(
-        uri: Uri,
-        charset: Charset = Charsets.UTF_8,
-    ): BufferedWriter? {
-        return this.openOutputStream(uri)?.bufferedWriter(charset = charset)
-    }
+private fun ContentResolver.openBufferedReader(
+    uri: Uri,
+    charset: Charset = Charsets.UTF_8,
+): BufferedReader? {
+    return this.openInputStream(uri)?.bufferedReader(charset = charset)
+}
 
-    private fun ContentResolver.getDisplayName(uri: Uri): String? {
-        val cursor = this.query(
-            /* uri = */
-            uri,
-            /* projection = */
-            arrayOf(OpenableColumns.DISPLAY_NAME),
-            /* selection = */
-            null,
-            /* selectionArgs = */
-            null,
-            /* sortOrder = */
-            null,
-            /* cancellationSignal = */
-            null,
-        ) ?: return null
+private fun ContentResolver.openBufferedWriter(
+    uri: Uri,
+    charset: Charset = Charsets.UTF_8,
+): BufferedWriter? {
+    return this.openOutputStream(uri)?.bufferedWriter(charset = charset)
+}
 
-        return cursor.use {
-            if (!it.moveToFirst()) return@use null
+private fun ContentResolver.getDisplayName(uri: Uri): String? {
+    val cursor = this.query(
+        /* uri = */
+        uri,
+        /* projection = */
+        arrayOf(OpenableColumns.DISPLAY_NAME),
+        /* selection = */
+        null,
+        /* selectionArgs = */
+        null,
+        /* sortOrder = */
+        null,
+        /* cancellationSignal = */
+        null,
+    ) ?: return null
 
-            val displayNameColumnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (displayNameColumnIndex != -1) it.getString(displayNameColumnIndex) else null
-        }
+    return cursor.use {
+        if (!it.moveToFirst()) return@use null
+
+        val displayNameColumnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (displayNameColumnIndex != -1) it.getString(displayNameColumnIndex) else null
     }
 }

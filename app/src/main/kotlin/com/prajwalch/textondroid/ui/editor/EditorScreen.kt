@@ -1,15 +1,20 @@
 package com.prajwalch.textondroid.ui.editor
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -36,14 +41,38 @@ fun EditorScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    var showSaveAsDialog by rememberSaveable { mutableStateOf(false) }
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        // TODO: Only plan text?
+        contract = ActivityResultContracts.CreateDocument("text/plain"),
+    ) { documentUri ->
+        documentUri?.let(viewModel::updateDocumentUri)
+    }
+
+    if (showSaveAsDialog) {
+        SaveAsDialog(
+            onDismiss = { showSaveAsDialog = false },
+            onSave = {
+                createDocumentLauncher.launch(it)
+                showSaveAsDialog = false
+            },
+        )
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .then(modifier),
         topBar = {
             EditorScreenTopBar(
-                title = uiState.fileName,
-                onSave = viewModel::save,
+                title = uiState.fileName ?: stringResource(R.string.editor_untitled_doc),
+                onSave = {
+                    if (uiState.fileName == null) {
+                        showSaveAsDialog = true
+                    } else {
+                        viewModel.save()
+                    }
+                },
                 onUndo = {},
                 onRedo = {},
                 onFind = {},
@@ -192,4 +221,47 @@ private fun TopBarMoreOptionsMenu(
             },
         )
     }
+}
+
+@Composable
+private fun SaveAsDialog(
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var fileName by rememberSaveable { mutableStateOf("") }
+
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_save_as),
+                contentDescription = null,
+            )
+        },
+        title = { Text(text = stringResource(R.string.editor_dialog_save_as_title)) },
+        text = {
+            OutlinedTextField(
+                value = fileName,
+                onValueChange = { fileName = it },
+                label = {
+                    Text(text = stringResource(R.string.editor_dialog_save_as_text_field_label))
+                },
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onSave(fileName) },
+                enabled = fileName.isNotBlank(),
+            ) {
+                Text(text = stringResource(R.string.editor_dialog_save_as_button_done))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.editor_dialog_save_as_button_cancel))
+            }
+        },
+    )
 }
