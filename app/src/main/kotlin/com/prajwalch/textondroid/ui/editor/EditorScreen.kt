@@ -58,7 +58,7 @@ fun EditorScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
+        contract = ActivityResultContracts.OpenDocument(),
     ) { documentUri ->
         documentUri?.let(viewModel::openDocument)
     }
@@ -128,7 +128,7 @@ fun EditorScreen(
                         .fillMaxSize()
                         .padding(innerPadding)
                         .padding(horizontal = MaterialTheme.spaces.large),
-                    onOpenFile = { openDocumentLauncher.launch(PLAIN_DOCUMENT_MIME_TYPE) },
+                    onOpenFile = { openDocumentLauncher.launch(arrayOf(PLAIN_DOCUMENT_MIME_TYPE)) },
                     onNewFile = { showSaveAsDialog = true },
                 )
             }
