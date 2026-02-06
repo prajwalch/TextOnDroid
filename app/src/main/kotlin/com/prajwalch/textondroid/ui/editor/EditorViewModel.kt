@@ -99,7 +99,9 @@ class EditorViewModel(
     }
 
     private suspend fun readDocumentContent(documentUri: Uri) = withContext(Dispatchers.IO) {
-        contentResolver.openBufferedReader(uri = documentUri)?.use { it.readText() }
+        contentResolver.openBufferedReader(uri = documentUri)?.use {
+            buildString { it.forEachLine(::append) }
+        }
     }
 
     private companion object {
