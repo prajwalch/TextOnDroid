@@ -26,6 +26,7 @@ import java.nio.charset.Charset
 data class EditorUiState(
     val title: String? = null,
     val content: String = "",
+    val isDirty: Boolean = false,
     val isDocumentLoading: Boolean = false,
     val isDocumentOpened: Boolean = false,
 )
@@ -87,7 +88,7 @@ class EditorViewModel(
 
     /** Updates the current content with the given one. */
     fun updateDocumentContent(content: String) {
-        _uiState.update { it.copy(content = content) }
+        _uiState.update { it.copy(content = content, isDirty = true) }
     }
 
     /** Saves the currently opened document. */
@@ -98,6 +99,8 @@ class EditorViewModel(
             contentResolver.openBufferedWriter(documentUri)?.use {
                 it.write(_uiState.value.content)
             }
+
+            _uiState.update { it.copy(isDirty = false) }
         }
     }
 

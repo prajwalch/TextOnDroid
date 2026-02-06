@@ -85,7 +85,7 @@ fun EditorScreen(
             .then(modifier),
         topBar = {
             EditorScreenTopBar(
-                title = uiState.title,
+                title = uiState.title?.let { if (uiState.isDirty) "$it*" else it },
                 onSave = viewModel::saveDocument,
                 onUndo = {},
                 onRedo = {},
