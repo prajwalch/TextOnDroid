@@ -11,7 +11,10 @@ import androidx.lifecycle.viewModelScope
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,8 +24,9 @@ import java.io.BufferedWriter
 import java.nio.charset.Charset
 
 data class EditorUiState(
-    val fileName: String? = null,
+    val title: String? = null,
     val content: String = "",
+    val isDocumentOpened: Boolean = false,
 )
 
 /** ViewModel which handles the business logic of core text editor. */
@@ -30,45 +34,59 @@ class EditorViewModel(
     private val contentResolver: ContentResolver,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
-    /** Uri of a document. */
-    private val documentUri get() = savedStateHandle.get<String>(DOCUMENT_URI_KEY)?.toUri()
+    /** [Uri] of a currently opened document. */
+    private val openedDocumentUri = savedStateHandle
+        .getStateFlow<String?>(key = OPENED_DOCUMENT_URI_KEY, initialValue = null)
+        .map { it?.toUri() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
+        )
 
-    /** Current UI state. */
+    /** Internal mutable UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())
-    val uiState = _uiState.asStateFlow()
+
+    /** Current public UI state. */
+    val uiState = combine(
+        _uiState,
+        openedDocumentUri.map { it != null },
+    ) { currentUiState, isDocumentOpened ->
+        currentUiState.copy(isDocumentOpened = isDocumentOpened)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = EditorUiState(),
+    )
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            val documentUri = documentUri ?: return@launch
+        openedDocumentUri.value?.let(::openDocument)
+    }
 
-            val fileName = contentResolver.getDisplayName(documentUri)
-            _uiState.update { it.copy(fileName = fileName) }
+    /** Opens the document pointed by the given URI. */
+    fun openDocument(documentUri: Uri) {
+        viewModelScope.launch {
+            // Save Uri for later "save" operation.
+            savedStateHandle[OPENED_DOCUMENT_URI_KEY] = documentUri.toString()
 
-            contentResolver.openBufferedReader(documentUri)?.use { contentReader ->
-                updateContent(content = contentReader.readText())
+            val title = readDocumentTitle(documentUri)
+            val content = readDocumentContent(documentUri)
+
+            _uiState.update {
+                it.copy(title = title, content = content ?: it.content)
             }
         }
     }
 
-    /** Updates the URI of a document to operate on. */
-    fun updateDocumentUri(uri: Uri) {
-        viewModelScope.launch {
-            savedStateHandle[DOCUMENT_URI_KEY] = uri.toString()
-
-            val fileName = withContext(Dispatchers.IO) { contentResolver.getDisplayName(uri) }
-            _uiState.update { it.copy(fileName = fileName) }
-        }
-    }
-
     /** Updates the current content with the given one. */
-    fun updateContent(content: String) {
+    fun updateDocumentContent(content: String) {
         _uiState.update { it.copy(content = content) }
     }
 
-    /** Saves the current document. */
-    fun save() {
+    /** Saves the currently opened document. */
+    fun saveDocument() {
         viewModelScope.launch(Dispatchers.IO) {
-            val documentUri = documentUri ?: return@launch
+            val documentUri = openedDocumentUri.value ?: return@launch
 
             contentResolver.openBufferedWriter(documentUri)?.use {
                 it.write(_uiState.value.content)
@@ -76,8 +94,16 @@ class EditorViewModel(
         }
     }
 
+    private suspend fun readDocumentTitle(documentUri: Uri) = withContext(Dispatchers.IO) {
+        contentResolver.getDisplayName(uri = documentUri)
+    }
+
+    private suspend fun readDocumentContent(documentUri: Uri) = withContext(Dispatchers.IO) {
+        contentResolver.openBufferedReader(uri = documentUri)?.use { it.readText() }
+    }
+
     private companion object {
-        private const val DOCUMENT_URI_KEY = "documentUri"
+        private const val OPENED_DOCUMENT_URI_KEY = "documentUri"
     }
 }
 
