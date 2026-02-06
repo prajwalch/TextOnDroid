@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -95,27 +96,42 @@ fun EditorScreen(
             )
         },
     ) { innerPadding ->
-        if (!uiState.isDocumentOpened) {
-            WelcomePage(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = MaterialTheme.spaces.large),
-                onOpenFile = { openDocumentLauncher.launch(PLAIN_DOCUMENT_MIME_TYPE) },
-                onNewFile = { showSaveAsDialog = true },
-            )
-        } else {
-            TextField(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                value = uiState.content,
-                onValueChange = viewModel::updateDocumentContent,
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                ),
-            )
+        when {
+            uiState.isDocumentLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            uiState.isDocumentOpened -> {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    value = uiState.content,
+                    onValueChange = viewModel::updateDocumentContent,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                )
+            }
+
+            else -> {
+                WelcomePage(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = MaterialTheme.spaces.large),
+                    onOpenFile = { openDocumentLauncher.launch(PLAIN_DOCUMENT_MIME_TYPE) },
+                    onNewFile = { showSaveAsDialog = true },
+                )
+            }
         }
     }
 }

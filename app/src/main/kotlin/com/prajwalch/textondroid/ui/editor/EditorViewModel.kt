@@ -26,6 +26,7 @@ import java.nio.charset.Charset
 data class EditorUiState(
     val title: String? = null,
     val content: String = "",
+    val isDocumentLoading: Boolean = false,
     val isDocumentOpened: Boolean = false,
 )
 
@@ -66,6 +67,8 @@ class EditorViewModel(
     /** Opens the document pointed by the given URI. */
     fun openDocument(documentUri: Uri) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isDocumentLoading = true) }
+
             // Save Uri for later "save" operation.
             savedStateHandle[OPENED_DOCUMENT_URI_KEY] = documentUri.toString()
 
@@ -73,7 +76,11 @@ class EditorViewModel(
             val content = readDocumentContent(documentUri)
 
             _uiState.update {
-                it.copy(title = title, content = content ?: it.content)
+                it.copy(
+                    title = title,
+                    content = content ?: it.content,
+                    isDocumentLoading = false,
+                )
             }
         }
     }
