@@ -1,6 +1,6 @@
 # TextOnDroid
 
-TextOnDroid is a minimalist text editor for Android, built around a single, focused goal: editing basic text files.
+TextOnDroid is a simple text editor for Android, built around a single, focused goal: editing basic text files.
 
 It intentionally avoids features like syntax highlighting, code completion, and other advanced tooling to remain fast, lightweight, and distraction-free.
 
