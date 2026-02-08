@@ -86,6 +86,19 @@ class EditorViewModel(
         }
     }
 
+    /** Closes the currently opened document. */
+    fun closeDocument() {
+        savedStateHandle[OPENED_DOCUMENT_URI_KEY] = null
+        _uiState.update {
+            it.copy(
+                title = null,
+                content = "",
+                isDirty = false,
+                isDocumentOpened = false,
+            )
+        }
+    }
+
     /** Updates the current content with the given one. */
     fun updateDocumentContent(content: String) {
         _uiState.update { it.copy(content = content, isDirty = true) }

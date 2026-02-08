@@ -79,6 +79,16 @@ fun EditorScreen(
         )
     }
 
+    var showUnsavedChangesDialog by rememberSaveable(uiState.isDocumentOpened) {
+        mutableStateOf(false)
+    }
+    if (showUnsavedChangesDialog) {
+        UnsavedChangesDialog(
+            onDiscard = viewModel::closeDocument,
+            onKeepEditing = { showUnsavedChangesDialog = false },
+        )
+    }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -89,6 +99,13 @@ fun EditorScreen(
                 onSave = viewModel::saveDocument,
                 onUndo = {},
                 onRedo = {},
+                onClose = {
+                    if (uiState.isDirty) {
+                        showUnsavedChangesDialog = true
+                    } else {
+                        viewModel.closeDocument()
+                    }
+                },
                 onFind = {},
                 onReplace = {},
                 onNavigateToSettings = onNavigateToSettings,
@@ -143,6 +160,7 @@ private fun EditorScreenTopBar(
     onSave: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
+    onClose: () -> Unit,
     onFind: () -> Unit,
     onReplace: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -164,6 +182,7 @@ private fun EditorScreenTopBar(
                 TopBarMoreOptionsMenu(
                     expanded = showMoreOptions,
                     onDismiss = { showMoreOptions = false },
+                    onClose = onClose,
                     onFind = onFind,
                     onReplace = onReplace,
                     onNavigateToSettings = onNavigateToSettings,
@@ -250,6 +269,7 @@ private fun MoreVertIconButton(
 private fun TopBarMoreOptionsMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
+    onClose: () -> Unit,
     onFind: () -> Unit,
     onReplace: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -266,6 +286,17 @@ private fun TopBarMoreOptionsMenu(
         expanded = expanded,
         onDismissRequest = onDismiss,
     ) {
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.editor_action_close)) },
+            onClick = actionWithDismiss(onClose),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_close),
+                    contentDescription = null,
+                )
+            },
+            enabled = enableTextOperations,
+        )
         DropdownMenuItem(
             text = { Text(text = stringResource(R.string.editor_action_find)) },
             onClick = actionWithDismiss(onFind),
@@ -339,6 +370,36 @@ private fun SaveAsDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(text = stringResource(R.string.editor_dialog_save_as_button_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun UnsavedChangesDialog(
+    onDiscard: () -> Unit,
+    onKeepEditing: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onKeepEditing,
+        icon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_warning),
+                contentDescription = null,
+            )
+        },
+        title = { Text(text = stringResource(R.string.editor_dialog_unsaved_changes_title)) },
+        text = { Text(text = stringResource(R.string.editor_dialog_unsaved_changes_text)) },
+        confirmButton = {
+            TextButton(onClick = onDiscard) {
+                Text(text = stringResource(R.string.editor_dialog_unsaved_changes_button_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onKeepEditing) {
+                Text(text = stringResource(R.string.editor_dialog_unsaved_changes_button_dismiss))
             }
         },
     )

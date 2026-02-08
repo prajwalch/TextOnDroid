@@ -5,6 +5,7 @@
     <string name="editor_action_undo">Undo</string>
     <string name="editor_action_redo">Redo</string>
     <string name="editor_action_more_options">More options</string>
+    <string name="editor_action_close">Close</string>
     <string name="editor_action_find">Find</string>
     <string name="editor_action_replace">Replace</string>
     <string name="editor_action_settings">Settings</string>
@@ -14,4 +15,10 @@
     <string name="editor_dialog_save_as_text_field_label">File name</string>
     <string name="editor_dialog_save_as_button_done">Done</string>
     <string name="editor_dialog_save_as_button_cancel">Cancel</string>
+    <string name="editor_dialog_unsaved_changes_title">Unsaved changes</string>
+    <string name="editor_dialog_unsaved_changes_text">
+        Are you sure you want to discard unsaved changes to this document?
+    </string>
+    <string name="editor_dialog_unsaved_changes_button_confirm">Discard</string>
+    <string name="editor_dialog_unsaved_changes_button_dismiss">Keep editing</string>
 </resources>
