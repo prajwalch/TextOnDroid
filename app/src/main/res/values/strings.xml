@@ -2,6 +2,7 @@
     <string name="app_name">TextOnDroid</string>
 
     <string name="editor_action_save">Save</string>
+    <string name="editor_action_save_as">Save as</string>
     <string name="editor_action_undo">Undo</string>
     <string name="editor_action_redo">Redo</string>
     <string name="editor_action_more_options">More options</string>

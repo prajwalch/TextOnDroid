@@ -67,6 +67,11 @@ fun EditorScreen(
     ) { documentUri ->
         documentUri?.let(viewModel::openDocument)
     }
+    val saveAsDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(PLAIN_DOCUMENT_MIME_TYPE),
+    ) { documentUri ->
+        documentUri?.let(viewModel::saveDocumentAs)
+    }
 
     var showCreateNewFileDialog by rememberSaveable { mutableStateOf(false) }
     if (showCreateNewFileDialog) {
@@ -83,7 +88,7 @@ fun EditorScreen(
     if (showSaveAsDialog) {
         SaveAsDialog(
             onSave = { fileName ->
-                createDocumentLauncher.launch(fileName)
+                saveAsDocumentLauncher.launch(fileName)
                 showSaveAsDialog = false
             },
             onCancel = { showSaveAsDialog = false },
@@ -108,6 +113,7 @@ fun EditorScreen(
             EditorScreenTopBar(
                 title = uiState.title?.let { if (uiState.isDirty) "$it*" else it },
                 onSave = viewModel::saveDocument,
+                onSaveAs = { showSaveAsDialog = true },
                 onUndo = {},
                 onRedo = {},
                 onClose = {
@@ -169,6 +175,7 @@ fun EditorScreen(
 private fun EditorScreenTopBar(
     title: String?,
     onSave: () -> Unit,
+    onSaveAs: () -> Unit,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
     onClose: () -> Unit,
@@ -194,6 +201,7 @@ private fun EditorScreenTopBar(
                     expanded = showMoreOptions,
                     onDismiss = { showMoreOptions = false },
                     onClose = onClose,
+                    onSaveAs = onSaveAs,
                     onFind = onFind,
                     onReplace = onReplace,
                     onNavigateToSettings = onNavigateToSettings,
@@ -281,6 +289,7 @@ private fun TopBarMoreOptionsMenu(
     expanded: Boolean,
     onDismiss: () -> Unit,
     onClose: () -> Unit,
+    onSaveAs: () -> Unit,
     onFind: () -> Unit,
     onReplace: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -303,6 +312,17 @@ private fun TopBarMoreOptionsMenu(
             leadingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_close),
+                    contentDescription = null,
+                )
+            },
+            enabled = enableTextOperations,
+        )
+        DropdownMenuItem(
+            text = { Text(text = stringResource(R.string.editor_action_save_as)) },
+            onClick = actionWithDismiss(onSaveAs),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_save_as),
                     contentDescription = null,
                 )
             },

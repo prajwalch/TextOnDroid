@@ -106,14 +106,30 @@ class EditorViewModel(
 
     /** Saves the currently opened document. */
     fun saveDocument() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             val documentUri = openedDocumentUri.value ?: return@launch
 
-            contentResolver.openBufferedWriter(documentUri)?.use {
-                it.write(_uiState.value.content)
-            }
-
+            writeDocumentContent(
+                documentUri = documentUri,
+                content = _uiState.value.content,
+            )
             _uiState.update { it.copy(isDirty = false) }
+        }
+    }
+
+    /** Saves current document as a new one with the current content. */
+    fun saveDocumentAs(newDocumentUri: Uri) {
+        viewModelScope.launch {
+            savedStateHandle[OPENED_DOCUMENT_URI_KEY] = newDocumentUri.toString()
+
+            // Copy current content to new document.
+            writeDocumentContent(
+                documentUri = newDocumentUri,
+                content = _uiState.value.content,
+            )
+
+            val title = readDocumentTitle(newDocumentUri)
+            _uiState.update { it.copy(title = title, isDirty = false) }
         }
     }
 
@@ -124,6 +140,14 @@ class EditorViewModel(
     private suspend fun readDocumentContent(documentUri: Uri) = withContext(Dispatchers.IO) {
         contentResolver.openBufferedReader(uri = documentUri)?.use {
             buildString { it.forEachLine(::append) }
+        }
+    }
+
+    private suspend fun writeDocumentContent(documentUri: Uri, content: String) {
+        withContext(Dispatchers.IO) {
+            contentResolver.openBufferedWriter(uri = documentUri)?.use {
+                it.write(content)
+            }
         }
     }
 
