@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">TextOnDroid</string>
 
+    <string name="crash_screen_title">Oops!</string>
+    <string name="crash_screen_subtitle">
+        %1$s hit an unexpected error. Please export the logs and create a Github issue with the logs attached.
+    </string>
+    <string name="crash_button_export_crash_logs">Export crash logs to file</string>
+    <string name="crash_button_restart_application">Restart application</string>
+    <string name="crash_message_logs_exported">Logs exported to a file</string>
+
     <string name="editor_action_save">Save</string>
     <string name="editor_action_save_as">Save as</string>
     <string name="editor_action_undo">Undo</string>
