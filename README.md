@@ -15,3 +15,5 @@ As a result, TextOnDroid is ideal for situations where you just want to quickly 
 ## Translations
 
 ## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
