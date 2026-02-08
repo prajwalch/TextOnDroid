@@ -68,6 +68,17 @@ fun EditorScreen(
         documentUri?.let(viewModel::openDocument)
     }
 
+    var showCreateNewFileDialog by rememberSaveable { mutableStateOf(false) }
+    if (showCreateNewFileDialog) {
+        CreateNewFileDialog(
+            onCreate = { fileName ->
+                createDocumentLauncher.launch(fileName)
+                showCreateNewFileDialog = false
+            },
+            onCancel = { showCreateNewFileDialog = false },
+        )
+    }
+
     var showSaveAsDialog by rememberSaveable { mutableStateOf(false) }
     if (showSaveAsDialog) {
         SaveAsDialog(
@@ -146,7 +157,7 @@ fun EditorScreen(
                         .padding(innerPadding)
                         .padding(horizontal = MaterialTheme.spaces.large),
                     onOpenFile = { openDocumentLauncher.launch(arrayOf(PLAIN_DOCUMENT_MIME_TYPE)) },
-                    onNewFile = { showSaveAsDialog = true },
+                    onNewFile = { showCreateNewFileDialog = true },
                 )
             }
         }
@@ -330,6 +341,54 @@ private fun TopBarMoreOptionsMenu(
             },
         )
     }
+}
+
+
+@Composable
+private fun CreateNewFileDialog(
+    onCreate: (String) -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var fileName by rememberSaveable { mutableStateOf("") }
+
+    AlertDialog(
+        modifier = modifier,
+        onDismissRequest = onCancel,
+        icon = {
+            Icon(
+                painter = painterResource(R.drawable.ic_note_add),
+                contentDescription = null,
+            )
+        },
+        title = { Text(text = stringResource(R.string.editor_dialog_create_new_file_title)) },
+        text = {
+            OutlinedTextField(
+                value = fileName,
+                onValueChange = { fileName = it },
+                label = {
+                    Text(
+                        text = stringResource(
+                            R.string.editor_dialog_create_new_file_text_field_label
+                        )
+                    )
+                },
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onCreate(fileName) },
+                enabled = fileName.isNotBlank(),
+            ) {
+                Text(text = stringResource(R.string.editor_dialog_create_new_file_button_create))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text(text = stringResource(R.string.editor_dialog_create_new_file_button_cancel))
+            }
+        },
+    )
 }
 
 @Composable
