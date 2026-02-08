@@ -82,11 +82,11 @@ fun EditorScreen(
     var showSaveAsDialog by rememberSaveable { mutableStateOf(false) }
     if (showSaveAsDialog) {
         SaveAsDialog(
-            onDismiss = { showSaveAsDialog = false },
-            onConfirm = { fileName ->
+            onSave = { fileName ->
                 createDocumentLauncher.launch(fileName)
                 showSaveAsDialog = false
             },
+            onCancel = { showSaveAsDialog = false },
         )
     }
 
@@ -393,15 +393,15 @@ private fun CreateNewFileDialog(
 
 @Composable
 private fun SaveAsDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit,
+    onSave: (String) -> Unit,
+    onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var fileName by rememberSaveable { mutableStateOf("") }
 
     AlertDialog(
         modifier = modifier,
-        onDismissRequest = onDismiss,
+        onDismissRequest = onCancel,
         icon = {
             Icon(
                 painter = painterResource(R.drawable.ic_save_as),
@@ -420,14 +420,14 @@ private fun SaveAsDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(fileName) },
+                onClick = { onSave(fileName) },
                 enabled = fileName.isNotBlank(),
             ) {
-                Text(text = stringResource(R.string.editor_dialog_save_as_button_done))
+                Text(text = stringResource(R.string.editor_dialog_save_as_button_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onCancel) {
                 Text(text = stringResource(R.string.editor_dialog_save_as_button_cancel))
             }
         },

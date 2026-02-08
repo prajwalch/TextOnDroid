@@ -17,7 +17,7 @@
     <string name="editor_dialog_create_new_file_button_cancel">Cancel</string>
     <string name="editor_dialog_save_as_title">Save as?</string>
     <string name="editor_dialog_save_as_text_field_label">File name</string>
-    <string name="editor_dialog_save_as_button_done">Done</string>
+    <string name="editor_dialog_save_as_button_save">Save</string>
     <string name="editor_dialog_save_as_button_cancel">Cancel</string>
     <string name="editor_dialog_unsaved_changes_title">Unsaved changes</string>
     <string name="editor_dialog_unsaved_changes_text">
