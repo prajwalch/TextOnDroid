@@ -10,9 +10,23 @@ As a result, TextOnDroid is ideal for situations where you just want to quickly 
 
 ## Features
 
+Work in progress.
+
 ## Download
 
+Work in progress.
+
+### Stable
+
+Work in progress.
+
+### Nightly
+
+The Nightly versions are available under the artifact section of [workflow](https://github.com/prajwalch/TextOnDroid/actions) run (You may require to logging in to Github). These are created for each commit/push done to the repository and can be used by anyone to test new features or for debugging purpose. Please note that Nightly builds can contain bugs and may not work properly.
+
 ## Translations
+
+Work in progress.
 
 ## Contributing
 
