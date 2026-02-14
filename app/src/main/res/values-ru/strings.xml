@@ -1,3 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">TextOnDroid</string>
+    <string name="crash_screen_title">Ой!</string>
+    <string name="crash_screen_subtitle">Произошёл сбой в %1$s. Экспортируйте логи и создайте issue на GitHub с прикреплёнными логами.</string>
+    <string name="crash_button_export_crash_logs">Экспортировать логи сбоев в файл</string>
+    <string name="crash_button_restart_application">Перезапустить приложение</string>
+    <string name="crash_message_logs_exported">Логи экспортированы в файл</string>
+    <string name="editor_action_save">Сохранить</string>
+    <string name="editor_action_save_as">Сохранить как</string>
+    <string name="editor_action_undo">Отменить</string>
+    <string name="editor_action_redo">Повторить</string>
+    <string name="editor_action_more_options">Доп параметры</string>
+    <string name="editor_action_close">Закрыть</string>
+    <string name="editor_action_find">Найти</string>
+    <string name="editor_action_replace">Заменить</string>
+    <string name="editor_action_settings">Настройки</string>
+    <string name="editor_welcome_page_button_open_file">Открыть файл</string>
+    <string name="editor_welcome_page_button_new_file">Новый файл</string>
+    <string name="editor_dialog_create_new_file_title">Создать новый файл</string>
+    <string name="editor_dialog_create_new_file_text_field_label">Имя файла</string>
+    <string name="editor_dialog_create_new_file_button_create">Создать</string>
+    <string name="editor_dialog_create_new_file_button_cancel">Отмена</string>
+    <string name="editor_dialog_save_as_title">Сохранить как?</string>
+    <string name="editor_dialog_save_as_text_field_label">Имя файла</string>
+    <string name="editor_dialog_save_as_button_save">Сохранить</string>
+    <string name="editor_dialog_save_as_button_cancel">Отмена</string>
+    <string name="editor_dialog_unsaved_changes_title">Несохраненные изменения</string>
+    <string name="editor_dialog_unsaved_changes_text">Вы уверены, что хотите отменить несохраненные изменения в этом документе?</string>
+    <string name="editor_dialog_unsaved_changes_button_confirm">Выбросить</string>
+    <string name="editor_dialog_unsaved_changes_button_dismiss">Продолжить редактирование</string>
 </resources>
