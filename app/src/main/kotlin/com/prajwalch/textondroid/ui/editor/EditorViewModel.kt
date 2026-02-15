@@ -2,6 +2,7 @@ package com.prajwalch.textondroid.ui.editor
 
 import android.net.Uri
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -45,7 +46,22 @@ class EditorViewModel(
     /** Internal mutable UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())
 
+    /** The editable text state of an editor text field. */
     val textFieldState = TextFieldState(initialText = "")
+
+    /**
+     * Whether it is possible to execute a meaningful undo action right now.
+     * If this value is `false`, calling [undo] would be a no-op.
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    val canUndo: Boolean get() = textFieldState.undoState.canUndo
+
+    /**
+     * Whether it is possible to execute a meaningful redo action right now.
+     * If this value is `false`, calling [redo] would be a no-op.
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    val canRedo: Boolean get() = textFieldState.undoState.canRedo
 
     /** Current public UI state. */
     val uiState = combine(
@@ -64,6 +80,7 @@ class EditorViewModel(
     }
 
     /** Opens the document pointed by the given URI. */
+    @OptIn(ExperimentalFoundationApi::class)
     fun openDocument(documentUri: Uri) {
         viewModelScope.launch {
             _uiState.update { it.copy(isDocumentLoading = true) }
@@ -76,6 +93,7 @@ class EditorViewModel(
 
                 textFieldState.clearText()
                 textFieldState.setTextAndPlaceCursorAtEnd(document.content)
+                textFieldState.undoState.clearHistory()
             }
             _uiState.update { it.copy(isDocumentLoading = false) }
         }
@@ -122,6 +140,18 @@ class EditorViewModel(
             val title = documentRepository.readDocumentTitle(newDocumentUri)
             _uiState.update { it.copy(title = title, isDirty = false) }
         }
+    }
+
+    /** Reverts the latest edit. */
+    @OptIn(ExperimentalFoundationApi::class)
+    fun undo() {
+        textFieldState.undoState.undo()
+    }
+
+    /** Re-applies a change that was previously reverted via [undo]. */
+    @OptIn(ExperimentalFoundationApi::class)
+    fun redo() {
+        textFieldState.undoState.redo()
     }
 
     private companion object {

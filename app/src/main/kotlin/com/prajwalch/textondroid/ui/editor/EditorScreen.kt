@@ -115,8 +115,8 @@ fun EditorScreen(
                 title = uiState.title?.let { if (uiState.isDirty) "$it*" else it },
                 onSave = viewModel::saveDocument,
                 onSaveAs = { showSaveAsDialog = true },
-                onUndo = {},
-                onRedo = {},
+                onUndo = viewModel::undo,
+                onRedo = viewModel::redo,
                 onClose = {
                     if (uiState.isDirty) {
                         showUnsavedChangesDialog = true
@@ -128,6 +128,8 @@ fun EditorScreen(
                 onReplace = {},
                 onNavigateToSettings = onNavigateToSettings,
                 enableTextOperations = uiState.isDocumentOpened,
+                enableUndo = viewModel.canUndo,
+                enableRedo = viewModel.canRedo,
             )
         },
     ) { innerPadding ->
@@ -185,6 +187,8 @@ private fun EditorScreenTopBar(
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier,
     enableTextOperations: Boolean = true,
+    enableUndo: Boolean = true,
+    enableRedo: Boolean = true,
 ) {
     var showMoreOptions by rememberSaveable { mutableStateOf(false) }
 
@@ -193,8 +197,8 @@ private fun EditorScreenTopBar(
         title = { Text(text = title ?: stringResource(R.string.app_name)) },
         actions = {
             SaveIconButton(onClick = onSave, enabled = enableTextOperations)
-            UndoIconButton(onClick = onUndo, enabled = enableTextOperations)
-            RedoIconButton(onClick = onRedo, enabled = enableTextOperations)
+            UndoIconButton(onClick = onUndo, enabled = enableTextOperations && enableUndo)
+            RedoIconButton(onClick = onRedo, enabled = enableTextOperations && enableRedo)
 
             Box {
                 MoreVertIconButton(onClick = { showMoreOptions = true })
