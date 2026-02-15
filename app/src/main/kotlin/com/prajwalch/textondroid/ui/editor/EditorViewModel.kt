@@ -2,6 +2,9 @@ package com.prajwalch.textondroid.ui.editor
 
 import android.net.Uri
 
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -19,7 +22,6 @@ import kotlinx.coroutines.launch
 
 data class EditorUiState(
     val title: String? = null,
-    val content: String = "",
     val isDirty: Boolean = false,
     val isDocumentLoading: Boolean = false,
     val isDocumentOpened: Boolean = false,
@@ -42,6 +44,8 @@ class EditorViewModel(
 
     /** Internal mutable UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())
+
+    val textFieldState = TextFieldState(initialText = "")
 
     /** Current public UI state. */
     val uiState = combine(
@@ -67,33 +71,28 @@ class EditorViewModel(
             // Save Uri for later "save" operation.
             savedStateHandle[OPENED_DOCUMENT_URI_KEY] = documentUri.toString()
 
-            val document = documentRepository.openDocument(uri = documentUri)
-            _uiState.update {
-                it.copy(
-                    title = document?.title,
-                    content = document?.content ?: it.content,
-                    isDocumentLoading = false,
-                )
+            documentRepository.openDocument(uri = documentUri)?.let { document ->
+                _uiState.update { it.copy(title = document.title) }
+
+                textFieldState.clearText()
+                textFieldState.setTextAndPlaceCursorAtEnd(document.content)
             }
+            _uiState.update { it.copy(isDocumentLoading = false) }
         }
     }
 
     /** Closes the currently opened document. */
     fun closeDocument() {
         savedStateHandle[OPENED_DOCUMENT_URI_KEY] = null
+
+        textFieldState.clearText()
         _uiState.update {
             it.copy(
                 title = null,
-                content = "",
                 isDirty = false,
                 isDocumentOpened = false,
             )
         }
-    }
-
-    /** Updates the current content with the given one. */
-    fun updateDocumentContent(content: String) {
-        _uiState.update { it.copy(content = content, isDirty = true) }
     }
 
     /** Saves the currently opened document. */
@@ -103,7 +102,7 @@ class EditorViewModel(
 
             documentRepository.writeDocumentContent(
                 uri = documentUri,
-                content = _uiState.value.content,
+                content = textFieldState.text.toString(),
             )
             _uiState.update { it.copy(isDirty = false) }
         }
@@ -117,7 +116,7 @@ class EditorViewModel(
             // Copy current content to new document.
             documentRepository.writeDocumentContent(
                 uri = newDocumentUri,
-                content = _uiState.value.content,
+                content = textFieldState.text.toString(),
             )
 
             val title = documentRepository.readDocumentTitle(newDocumentUri)

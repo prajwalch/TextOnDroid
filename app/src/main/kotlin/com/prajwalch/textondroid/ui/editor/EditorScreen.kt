@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -147,8 +148,8 @@ fun EditorScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
-                    value = uiState.content,
-                    onValueChange = viewModel::updateDocumentContent,
+                    state = viewModel.textFieldState,
+                    lineLimits = TextFieldLineLimits.MultiLine(),
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
