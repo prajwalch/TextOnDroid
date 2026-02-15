@@ -3,6 +3,7 @@ package com.prajwalch.textondroid
 import android.app.Application
 
 import com.prajwalch.textondroid.di.appModule
+import com.prajwalch.textondroid.di.repositoryModule
 import com.prajwalch.textondroid.di.viewModelModule
 import com.prajwalch.textondroid.ui.crash.CrashActivity
 import com.prajwalch.textondroid.util.GlobalExceptionHandler
@@ -23,11 +24,11 @@ class TextOnDroidApplication : Application() {
                 activityToLaunch = CrashActivity::class.java,
             )
         )
-        
+
         startKoin {
             androidContext(this@TextOnDroidApplication)
             androidLogger()
-            modules(appModule, viewModelModule)
+            modules(appModule, repositoryModule, viewModelModule)
         }
 
         if (BuildConfig.DEBUG) {

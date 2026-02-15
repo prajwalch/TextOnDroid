@@ -1,15 +1,14 @@
 package com.prajwalch.textondroid.ui.editor
 
-import android.content.ContentResolver
 import android.net.Uri
-import android.provider.OpenableColumns
 
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
-import kotlinx.coroutines.Dispatchers
+import com.prajwalch.textondroid.data.DocumentRepository
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -17,11 +16,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.nio.charset.Charset
 
 data class EditorUiState(
     val title: String? = null,
@@ -33,7 +27,7 @@ data class EditorUiState(
 
 /** ViewModel which handles the business logic of core text editor. */
 class EditorViewModel(
-    private val contentResolver: ContentResolver,
+    private val documentRepository: DocumentRepository,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     /** [Uri] of a currently opened document. */
@@ -73,13 +67,11 @@ class EditorViewModel(
             // Save Uri for later "save" operation.
             savedStateHandle[OPENED_DOCUMENT_URI_KEY] = documentUri.toString()
 
-            val title = readDocumentTitle(documentUri)
-            val content = readDocumentContent(documentUri)
-
+            val document = documentRepository.openDocument(uri = documentUri)
             _uiState.update {
                 it.copy(
-                    title = title,
-                    content = content ?: it.content,
+                    title = document?.title,
+                    content = document?.content ?: it.content,
                     isDocumentLoading = false,
                 )
             }
@@ -109,8 +101,8 @@ class EditorViewModel(
         viewModelScope.launch {
             val documentUri = openedDocumentUri.value ?: return@launch
 
-            writeDocumentContent(
-                documentUri = documentUri,
+            documentRepository.writeDocumentContent(
+                uri = documentUri,
                 content = _uiState.value.content,
             )
             _uiState.update { it.copy(isDirty = false) }
@@ -123,73 +115,17 @@ class EditorViewModel(
             savedStateHandle[OPENED_DOCUMENT_URI_KEY] = newDocumentUri.toString()
 
             // Copy current content to new document.
-            writeDocumentContent(
-                documentUri = newDocumentUri,
+            documentRepository.writeDocumentContent(
+                uri = newDocumentUri,
                 content = _uiState.value.content,
             )
 
-            val title = readDocumentTitle(newDocumentUri)
+            val title = documentRepository.readDocumentTitle(newDocumentUri)
             _uiState.update { it.copy(title = title, isDirty = false) }
-        }
-    }
-
-    private suspend fun readDocumentTitle(documentUri: Uri) = withContext(Dispatchers.IO) {
-        contentResolver.getDisplayName(uri = documentUri)
-    }
-
-    private suspend fun readDocumentContent(documentUri: Uri) = withContext(Dispatchers.IO) {
-        contentResolver.openBufferedReader(uri = documentUri)?.use {
-            buildString { it.forEachLine(::append) }
-        }
-    }
-
-    private suspend fun writeDocumentContent(documentUri: Uri, content: String) {
-        withContext(Dispatchers.IO) {
-            contentResolver.openBufferedWriter(uri = documentUri)?.use {
-                it.write(content)
-            }
         }
     }
 
     private companion object {
         private const val OPENED_DOCUMENT_URI_KEY = "documentUri"
-    }
-}
-
-private fun ContentResolver.openBufferedReader(
-    uri: Uri,
-    charset: Charset = Charsets.UTF_8,
-): BufferedReader? {
-    return this.openInputStream(uri)?.bufferedReader(charset = charset)
-}
-
-private fun ContentResolver.openBufferedWriter(
-    uri: Uri,
-    charset: Charset = Charsets.UTF_8,
-): BufferedWriter? {
-    return this.openOutputStream(uri)?.bufferedWriter(charset = charset)
-}
-
-private fun ContentResolver.getDisplayName(uri: Uri): String? {
-    val cursor = this.query(
-        /* uri = */
-        uri,
-        /* projection = */
-        arrayOf(OpenableColumns.DISPLAY_NAME),
-        /* selection = */
-        null,
-        /* selectionArgs = */
-        null,
-        /* sortOrder = */
-        null,
-        /* cancellationSignal = */
-        null,
-    ) ?: return null
-
-    return cursor.use {
-        if (!it.moveToFirst()) return@use null
-
-        val displayNameColumnIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        if (displayNameColumnIndex != -1) it.getString(displayNameColumnIndex) else null
     }
 }
