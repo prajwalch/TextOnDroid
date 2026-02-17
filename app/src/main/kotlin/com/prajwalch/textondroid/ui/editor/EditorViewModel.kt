@@ -16,12 +16,9 @@ import com.prajwalch.textondroid.data.DocumentRepository
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -38,17 +35,13 @@ class EditorViewModel(
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     /** [Uri] of a currently opened document. */
-    private val openedDocumentUri = savedStateHandle
-        .getStateFlow<String?>(key = OPENED_DOCUMENT_URI_KEY, initialValue = null)
-        .map { it?.toUri() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly,
-            initialValue = null,
-        )
+    private var openedDocumentUri: Uri?
+        get() = savedStateHandle.get<String?>(key = DOCUMENT_URI_KEY)?.toUri()
+        set(uri) = savedStateHandle.set(key = DOCUMENT_URI_KEY, value = uri?.toString())
 
     /** Internal mutable UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())
+    val uiState = _uiState.asStateFlow()
 
     /** The editable text state of an editor text field. */
     val textFieldState = TextFieldState(initialText = "")
@@ -67,59 +60,46 @@ class EditorViewModel(
     @OptIn(ExperimentalFoundationApi::class)
     val canRedo: Boolean get() = textFieldState.undoState.canRedo
 
-    /** Current public UI state. */
-    val uiState = combine(
-        _uiState,
-        openedDocumentUri.map { it != null },
-    ) { currentUiState, isDocumentOpened ->
-        currentUiState.copy(isDocumentOpened = isDocumentOpened)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = EditorUiState(),
-    )
-
     private var documentJob: Job? = null
 
     init {
-        openedDocumentUri.value?.let(::openDocument)
+        openedDocumentUri?.let(::openDocument)
     }
 
     /** Opens the document pointed by the given URI. */
-    @OptIn(ExperimentalFoundationApi::class)
     fun openDocument(documentUri: Uri) {
         documentJob?.cancel()
         documentJob = viewModelScope.launch {
-            _uiState.update { it.copy(isDocumentLoading = true) }
+            _uiState.value = EditorUiState(isDocumentLoading = true)
 
             // Save Uri for later "save" operation.
-            savedStateHandle[OPENED_DOCUMENT_URI_KEY] = documentUri.toString()
+            openedDocumentUri = documentUri
 
             documentRepository.openDocument(uri = documentUri)?.let { document ->
                 _uiState.update { it.copy(title = document.title) }
                 setContent(content = document.content)
             }
-            _uiState.update { it.copy(isDocumentLoading = false) }
-
-            observeContentChange {
-                _uiState.update { it.copy(isDirty = true) }
+            _uiState.update {
+                it.copy(isDocumentLoading = false, isDocumentOpened = true)
             }
+
+            observeContentChange { _uiState.update { it.copy(isDirty = true) } }
         }
     }
 
     /** Closes the currently opened document. */
     fun closeDocument() {
-        savedStateHandle[OPENED_DOCUMENT_URI_KEY] = null
+        _uiState.value = EditorUiState()
 
+        openedDocumentUri = null
         documentJob?.cancel()
         clearContent()
-        _uiState.update { it.copy(title = null, isDirty = false) }
     }
 
     /** Saves the currently opened document. */
     fun saveDocument() {
         viewModelScope.launch {
-            val documentUri = openedDocumentUri.value ?: return@launch
+            val documentUri = openedDocumentUri ?: return@launch
 
             documentRepository.writeDocumentContent(
                 uri = documentUri,
@@ -132,7 +112,7 @@ class EditorViewModel(
     /** Saves current document as a new one with the current content. */
     fun saveDocumentAs(newDocumentUri: Uri) {
         viewModelScope.launch {
-            savedStateHandle[OPENED_DOCUMENT_URI_KEY] = newDocumentUri.toString()
+            openedDocumentUri = newDocumentUri
 
             // Copy current content to new document.
             documentRepository.writeDocumentContent(
@@ -184,6 +164,6 @@ class EditorViewModel(
     }
 
     private companion object {
-        private const val OPENED_DOCUMENT_URI_KEY = "documentUri"
+        private const val DOCUMENT_URI_KEY = "documentUri"
     }
 }
