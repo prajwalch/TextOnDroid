@@ -199,7 +199,12 @@ private fun EditorScreenTopBar(
 
     TopAppBar(
         modifier = modifier,
-        title = { Text(text = title ?: stringResource(R.string.app_name)) },
+        title = {
+            Text(
+                text = title ?: stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleMedium,
+            )
+        },
         actions = {
             SaveIconButton(onClick = onSave, enabled = enableTextOperations)
             UndoIconButton(onClick = onUndo, enabled = enableTextOperations && enableUndo)
