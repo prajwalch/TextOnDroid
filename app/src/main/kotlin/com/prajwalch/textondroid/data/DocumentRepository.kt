@@ -44,10 +44,14 @@ class DocumentRepository(private val contentResolver: ContentResolver) {
     }
 
     private suspend fun readDocumentContent(uri: Uri): String? = withContext(ioDispatcher) {
-        val bufferedReader = contentResolver.openInputStream(uri)?.bufferedReader()
+        val bufferedReader =
+            contentResolver.openInputStream(uri)?.bufferedReader() ?: return@withContext null
 
-        bufferedReader?.use {
-            buildString { it.forEachLine(::append) }
+        buildString {
+            bufferedReader.forEachLine {
+                append(it)
+                append(System.lineSeparator())
+            }
         }
     }
 
