@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TextOnDroid">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.TextOnDroid">
             <intent-filter>
@@ -31,7 +31,7 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
-        
+
         <activity
             android:name=".ui.crash.CrashActivity"
             android:exported="false" />

@@ -11,7 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 
 import com.prajwalch.textondroid.R
-import com.prajwalch.textondroid.ui.MainActivity
+import com.prajwalch.textondroid.ui.main.MainActivity
 import com.prajwalch.textondroid.ui.theme.TextOnDroidTheme
 import com.prajwalch.textondroid.util.GlobalExceptionHandler
 import com.prajwalch.textondroid.util.LogsExporter
