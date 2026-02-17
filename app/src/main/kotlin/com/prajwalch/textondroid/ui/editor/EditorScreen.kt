@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -151,16 +154,11 @@ fun EditorScreen(
             }
 
             uiState.isDocumentOpened -> {
-                TextField(
+                EditorTextField(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding),
                     state = viewModel.textFieldState,
-                    lineLimits = TextFieldLineLimits.MultiLine(),
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                    ),
                 )
             }
 
@@ -496,6 +494,23 @@ private fun UnsavedChangesDialog(
                 Text(text = stringResource(R.string.editor_dialog_unsaved_changes_button_dismiss))
             }
         },
+    )
+}
+
+@Composable
+private fun EditorTextField(
+    modifier: Modifier = Modifier,
+    state: TextFieldState = rememberTextFieldState(),
+) {
+    TextField(
+        modifier = modifier,
+        state = state,
+        lineLimits = TextFieldLineLimits.MultiLine(),
+        shape = RectangleShape,
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+        ),
     )
 }
 
