@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.snapshotFlow
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -13,9 +14,12 @@ import androidx.lifecycle.viewModelScope
 
 import com.prajwalch.textondroid.data.DocumentRepository
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -75,6 +79,8 @@ class EditorViewModel(
         initialValue = EditorUiState(),
     )
 
+    private var documentJob: Job? = null
+
     init {
         openedDocumentUri.value?.let(::openDocument)
     }
@@ -82,7 +88,8 @@ class EditorViewModel(
     /** Opens the document pointed by the given URI. */
     @OptIn(ExperimentalFoundationApi::class)
     fun openDocument(documentUri: Uri) {
-        viewModelScope.launch {
+        documentJob?.cancel()
+        documentJob = viewModelScope.launch {
             _uiState.update { it.copy(isDocumentLoading = true) }
 
             // Save Uri for later "save" operation.
@@ -93,6 +100,10 @@ class EditorViewModel(
                 setContent(content = document.content)
             }
             _uiState.update { it.copy(isDocumentLoading = false) }
+
+            observeContentChange {
+                _uiState.update { it.copy(isDirty = true) }
+            }
         }
     }
 
@@ -100,6 +111,7 @@ class EditorViewModel(
     fun closeDocument() {
         savedStateHandle[OPENED_DOCUMENT_URI_KEY] = null
 
+        documentJob?.cancel()
         clearContent()
         _uiState.update { it.copy(title = null, isDirty = false) }
     }
@@ -161,6 +173,14 @@ class EditorViewModel(
     @OptIn(ExperimentalFoundationApi::class)
     fun redo() {
         textFieldState.undoState.redo()
+    }
+
+    private suspend fun observeContentChange(action: () -> Unit) {
+        snapshotFlow { textFieldState.text }
+            // Ignore initial text.
+            .drop(1)
+            .cancellable()
+            .collect { action() }
     }
 
     private companion object {
