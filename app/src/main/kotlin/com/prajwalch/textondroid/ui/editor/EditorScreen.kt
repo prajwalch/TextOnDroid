@@ -111,8 +111,13 @@ fun EditorScreen(
             .fillMaxSize()
             .then(modifier),
         topBar = {
+            val title = if (uiState.isDocumentOpened) {
+                uiState.title?.let { if (uiState.isDirty) "$it*" else it }
+            } else {
+                null
+            }
             EditorScreenTopBar(
-                title = uiState.title?.let { if (uiState.isDirty) "$it*" else it },
+                title = title,
                 onSave = viewModel::saveDocument,
                 onSaveAs = { showSaveAsDialog = true },
                 onUndo = viewModel::undo,
