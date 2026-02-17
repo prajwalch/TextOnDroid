@@ -90,10 +90,7 @@ class EditorViewModel(
 
             documentRepository.openDocument(uri = documentUri)?.let { document ->
                 _uiState.update { it.copy(title = document.title) }
-
-                textFieldState.clearText()
-                textFieldState.setTextAndPlaceCursorAtEnd(document.content)
-                textFieldState.undoState.clearHistory()
+                setContent(content = document.content)
             }
             _uiState.update { it.copy(isDocumentLoading = false) }
         }
@@ -103,14 +100,8 @@ class EditorViewModel(
     fun closeDocument() {
         savedStateHandle[OPENED_DOCUMENT_URI_KEY] = null
 
-        textFieldState.clearText()
-        _uiState.update {
-            it.copy(
-                title = null,
-                isDirty = false,
-                isDocumentOpened = false,
-            )
-        }
+        clearContent()
+        _uiState.update { it.copy(title = null, isDirty = false) }
     }
 
     /** Saves the currently opened document. */
@@ -120,7 +111,7 @@ class EditorViewModel(
 
             documentRepository.writeDocumentContent(
                 uri = documentUri,
-                content = textFieldState.text.toString(),
+                content = getContent(),
             )
             _uiState.update { it.copy(isDirty = false) }
         }
@@ -134,12 +125,30 @@ class EditorViewModel(
             // Copy current content to new document.
             documentRepository.writeDocumentContent(
                 uri = newDocumentUri,
-                content = textFieldState.text.toString(),
+                content = getContent(),
             )
 
             val title = documentRepository.readDocumentTitle(newDocumentUri)
             _uiState.update { it.copy(title = title, isDirty = false) }
         }
+    }
+
+    /**
+     * Sets the content in [textFieldState], replacing any content that was
+     * previously there, and places the cursor at the end.
+     */
+    @OptIn(ExperimentalFoundationApi::class)
+    private fun setContent(content: CharSequence) {
+        textFieldState.setTextAndPlaceCursorAtEnd(text = content.toString())
+        textFieldState.undoState.clearHistory()
+    }
+
+    /** Returns the current content. */
+    private fun getContent() = textFieldState.text.toString()
+
+    /** Clears the current content. */
+    private fun clearContent() {
+        textFieldState.clearText()
     }
 
     /** Reverts the latest edit. */
