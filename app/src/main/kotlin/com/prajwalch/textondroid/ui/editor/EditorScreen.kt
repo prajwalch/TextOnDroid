@@ -454,6 +454,7 @@ private fun SaveAsDialog(
                 label = {
                     Text(text = stringResource(R.string.editor_dialog_save_as_text_field_label))
                 },
+                singleLine = true,
             )
         },
         confirmButton = {
