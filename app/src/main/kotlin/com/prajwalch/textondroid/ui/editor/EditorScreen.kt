@@ -410,6 +410,7 @@ private fun CreateNewFileDialog(
                         )
                     )
                 },
+                singleLine = true,
             )
         },
         confirmButton = {
