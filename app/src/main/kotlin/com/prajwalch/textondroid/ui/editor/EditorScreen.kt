@@ -2,6 +2,7 @@ package com.prajwalch.textondroid.ui.editor
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -160,6 +162,7 @@ fun EditorScreen(
                         .fillMaxSize()
                         .padding(innerPadding),
                     state = viewModel.textFieldState,
+                    wrapLines = uiState.settings.wrapLines,
                 )
             }
 
@@ -502,9 +505,16 @@ private fun UnsavedChangesDialog(
 private fun EditorTextField(
     modifier: Modifier = Modifier,
     state: TextFieldState = rememberTextFieldState(),
+    wrapLines: Boolean = false,
 ) {
+    val wrapLinesModifier = if (!wrapLines) {
+        Modifier.horizontalScroll(state = rememberScrollState())
+    } else {
+        Modifier
+    }
+
     TextField(
-        modifier = modifier,
+        modifier = modifier.then(wrapLinesModifier),
         state = state,
         lineLimits = TextFieldLineLimits.MultiLine(),
         shape = RectangleShape,

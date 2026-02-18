@@ -66,6 +66,10 @@ fun SettingsScreen(
                 enablePureBlack = uiState.enablePureBlack,
                 onEnablePureBlack = viewModel::enablePureBlack,
             )
+            EditorSettings(
+                wrapLines = uiState.wrapLines,
+                onSetWrapLines = viewModel::setWrapLines,
+            )
         }
     }
 }
@@ -193,4 +197,29 @@ private fun Theme.displayName(): String {
     }
 
     return stringResource(id)
+}
+
+@Composable
+private fun EditorSettings(
+    wrapLines: Boolean,
+    onSetWrapLines: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SettingsGroup(
+        modifier = modifier,
+        name = stringResource(R.string.settings_group_editor),
+    ) {
+        SettingsListItem(
+            onClick = { onSetWrapLines(!wrapLines) },
+            leadingIcon = R.drawable.ic_wrap_text,
+            name = stringResource(R.string.settings_wrap_lines),
+            summary = stringResource(R.string.settings_wrap_lines_summary),
+            trailingContent = {
+                Switch(
+                    checked = wrapLines,
+                    onCheckedChange = onSetWrapLines,
+                )
+            },
+        )
+    }
 }

@@ -46,4 +46,9 @@
     <string name="settings_theme">Theme</string>
     <string name="settings_pure_black">Pure black</string>
     <string name="settings_pure_black_summary">Enables AMOLED theme mode</string>
+    <string name="settings_group_editor">Editor</string>
+    <string name="settings_wrap_lines">Wrap lines</string>
+    <string name="settings_wrap_lines_summary">
+        Wraps long lines to the next line instead of using horizontal scrolling
+    </string>
 </resources>

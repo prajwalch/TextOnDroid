@@ -25,6 +25,9 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
     val enablePureBlack: Flow<Boolean> = dataStore
         .getOrDefault(key = ENABLE_PURE_BLACK, default = false)
 
+    val wrapLines: Flow<Boolean> = dataStore
+        .getOrDefault(key = WRAP_LINES, default = false)
+
     suspend fun enableDynamicTheme(enable: Boolean) {
         dataStore.setOrUpdate(key = ENABLE_DYNAMIC_THEME, value = enable)
     }
@@ -37,10 +40,18 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         dataStore.setOrUpdate(key = ENABLE_PURE_BLACK, value = enable)
     }
 
+    suspend fun setWrapLines(wrap: Boolean) {
+        dataStore.setOrUpdate(key = WRAP_LINES, value = wrap)
+    }
+
     private companion object {
+        // Appearance
         val ENABLE_DYNAMIC_THEME = booleanPreferencesKey("enable_dynamic_theme")
         val THEME = stringPreferencesKey("theme")
         val ENABLE_PURE_BLACK = booleanPreferencesKey("enable_pure_black")
+
+        // Editor
+        val WRAP_LINES = booleanPreferencesKey("wrap_lines")
     }
 }
 

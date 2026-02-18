@@ -13,12 +13,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 
 import com.prajwalch.textondroid.data.DocumentRepository
+import com.prajwalch.textondroid.data.SettingsRepository
 
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -27,11 +32,17 @@ data class EditorUiState(
     val isDirty: Boolean = false,
     val isDocumentLoading: Boolean = false,
     val isDocumentOpened: Boolean = false,
+    val settings: EditorSettings = EditorSettings(),
+)
+
+data class EditorSettings(
+    val wrapLines: Boolean = false,
 )
 
 /** ViewModel which handles the business logic of core text editor. */
 class EditorViewModel(
     private val documentRepository: DocumentRepository,
+    private val settingsRepository: SettingsRepository,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     /** [Uri] of a currently opened document. */
@@ -41,7 +52,16 @@ class EditorViewModel(
 
     /** Internal mutable UI state. */
     private val _uiState = MutableStateFlow(EditorUiState())
-    val uiState = _uiState.asStateFlow()
+    val uiState = combine(
+        _uiState,
+        getEditorSettings(),
+    ) { currentUiState, editorSettings ->
+        currentUiState.copy(settings = editorSettings)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = EditorUiState(),
+    )
 
     /** The editable text state of an editor text field. */
     val textFieldState = TextFieldState(initialText = "")
@@ -65,6 +85,10 @@ class EditorViewModel(
     init {
         openedDocumentUri?.let(::openDocument)
     }
+
+    /** Returns a [Flow] of editor specific settings. */
+    private fun getEditorSettings(): Flow<EditorSettings> =
+        settingsRepository.wrapLines.map(::EditorSettings)
 
     /** Opens the document pointed by the given URI. */
     fun openDocument(documentUri: Uri) {

@@ -15,6 +15,7 @@ data class SettingsUiState(
     val enableDynamicTheme: Boolean = true,
     val theme: Theme = Theme.Default,
     val enablePureBlack: Boolean = false,
+    val wrapLines: Boolean = false,
 )
 
 class SettingsViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
@@ -22,6 +23,7 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
         settingsRepository.enableDynamicTheme,
         settingsRepository.theme,
         settingsRepository.enablePureBlack,
+        settingsRepository.wrapLines,
         ::SettingsUiState,
     ).stateIn(
         scope = viewModelScope,
@@ -39,5 +41,9 @@ class SettingsViewModel(private val settingsRepository: SettingsRepository) : Vi
 
     fun enablePureBlack(enable: Boolean) {
         viewModelScope.launch { settingsRepository.enablePureBlack(enable) }
+    }
+
+    fun setWrapLines(wrap: Boolean) {
+        viewModelScope.launch { settingsRepository.setWrapLines(wrap) }
     }
 }
