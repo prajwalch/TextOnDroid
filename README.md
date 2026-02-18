@@ -30,7 +30,9 @@ The Nightly versions are available under the artifact section of [workflow](http
 
 ## Translations
 
-Work in progress.
+TextOnDroid is being translated using Weblate. For more details or to get started, visit [Weblate page](https://hosted.weblate.org/projects/textondroid/).
+
+[![Translation status](https://hosted.weblate.org/widget/textondroid/multi-auto.svg?threshold=0)](https://hosted.weblate.org/engage/textondroid/)
 
 ## Contributing
 
