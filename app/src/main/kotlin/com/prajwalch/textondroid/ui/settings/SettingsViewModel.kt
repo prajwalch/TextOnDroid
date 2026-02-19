@@ -15,7 +15,7 @@ data class SettingsUiState(
     val enableDynamicTheme: Boolean = true,
     val theme: Theme = Theme.Default,
     val enablePureBlack: Boolean = false,
-    val wrapLines: Boolean = false,
+    val wrapLines: Boolean = true,
 )
 
 class SettingsViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {

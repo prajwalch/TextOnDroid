@@ -26,7 +26,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         .getOrDefault(key = ENABLE_PURE_BLACK, default = false)
 
     val wrapLines: Flow<Boolean> = dataStore
-        .getOrDefault(key = WRAP_LINES, default = false)
+        .getOrDefault(key = WRAP_LINES, default = true)
 
     suspend fun enableDynamicTheme(enable: Boolean) {
         dataStore.setOrUpdate(key = ENABLE_DYNAMIC_THEME, value = enable)
