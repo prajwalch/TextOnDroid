@@ -87,7 +87,7 @@ fun EditorScreen(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    if (uiState.documentFileNotFound) {
+    if (uiState.isDocumentFileGone) {
         val title = uiState.title ?: "Untitled"
 
         val fileNotExistsError = stringResource(R.string.editor_file_not_exists_error, title)

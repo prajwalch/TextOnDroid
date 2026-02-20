@@ -27,20 +27,51 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * Represents editor UI specific state.
+ */
 data class EditorUiState(
+    /**
+     * Document title.
+     *
+     * `null` indicates either document is not opened yet or failure to get
+     * document name.
+     *
+     * **NOTE:** It shouldn't be strictly used to check whether any document is
+     * opened or not. Consider using [isDocumentOpened] for that.
+     */
     val title: String? = null,
+    /**
+     * Indicates whether there are unsaved changes or not.
+     */
     val isDirty: Boolean = false,
+    /**
+     * Indicates whether the document open process is running or not.
+     */
     val isDocumentLoading: Boolean = false,
+    /**
+     * Indicates any document opened or not.
+     */
     val isDocumentOpened: Boolean = false,
-    val documentFileNotFound: Boolean = false,
+    /**
+     * `true` indicates that the underlying document file is either deleted
+     * or moved to different location after it has been opened.
+     */
+    val isDocumentFileGone: Boolean = false,
+    /**
+     * Current editor specific settings.
+     */
     val settings: EditorSettings = EditorSettings(),
 )
 
+/**
+ * Editor specific settings.
+ */
 data class EditorSettings(
     val wrapLines: Boolean = false,
 )
 
-/** ViewModel which handles the business logic of core text editor. */
+/** ViewModel which handles the business logic of editor screen. */
 class EditorViewModel(
     private val documentRepository: DocumentRepository,
     private val settingsRepository: SettingsRepository,
@@ -81,9 +112,15 @@ class EditorViewModel(
     @OptIn(ExperimentalFoundationApi::class)
     val canRedo: Boolean get() = textFieldState.undoState.canRedo
 
-    private var documentJob: Job? = null
+    /**
+     * A background job running content changes observer.
+     *
+     * Job starts after a document is opened and canceled when document is closed.
+     */
+    private var contentObserverJob: Job? = null
 
     init {
+        // Open initial document if given.
         openedDocumentUri?.let(::openDocument)
     }
 
@@ -93,8 +130,9 @@ class EditorViewModel(
 
     /** Opens the document pointed by the given URI. */
     fun openDocument(documentUri: Uri) {
-        documentJob?.cancel()
-        documentJob = viewModelScope.launch {
+        contentObserverJob?.cancel()
+
+        contentObserverJob = viewModelScope.launch {
             _uiState.value = EditorUiState(isDocumentLoading = true)
 
             // Save Uri for later "save" operation.
@@ -120,7 +158,7 @@ class EditorViewModel(
         _uiState.value = EditorUiState()
 
         openedDocumentUri = null
-        documentJob?.cancel()
+        contentObserverJob?.cancel()
         clearContent()
     }
 
@@ -137,7 +175,7 @@ class EditorViewModel(
             if (writeSucceed) {
                 _uiState.update { it.copy(isDirty = false) }
             } else {
-                _uiState.update { it.copy(documentFileNotFound = true) }
+                _uiState.update { it.copy(isDocumentFileGone = true) }
                 openedDocumentUri = null
             }
         }
@@ -159,7 +197,7 @@ class EditorViewModel(
                 it.copy(
                     title = title,
                     isDirty = false,
-                    documentFileNotFound = false,
+                    isDocumentFileGone = false,
                 )
             }
         }
