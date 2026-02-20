@@ -1,5 +1,8 @@
 package com.prajwalch.textondroid.ui.editor
 
+import android.net.Uri
+
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.horizontalScroll
@@ -71,21 +74,11 @@ fun EditorScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val openDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { documentUri ->
-        documentUri?.let(viewModel::openDocument)
-    }
-    val createDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument(PLAIN_DOCUMENT_MIME_TYPE),
-    ) { documentUri ->
-        documentUri?.let(viewModel::openDocument)
-    }
-    val saveAsDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument(PLAIN_DOCUMENT_MIME_TYPE),
-    ) { documentUri ->
-        documentUri?.let(viewModel::saveDocumentAs)
-    }
+    val openDocumentLauncher = rememberOpenDocumentLauncher(onResult = viewModel::openDocument)
+    val createDocumentLauncher = rememberCreateDocumentLauncher(onResult = viewModel::openDocument)
+    val saveAsDocumentLauncher = rememberCreateDocumentLauncher(
+        onResult = viewModel::saveDocumentAs,
+    )
 
     var showCreateNewFileDialog by rememberSaveable { mutableStateOf(false) }
     if (showCreateNewFileDialog) {
@@ -206,6 +199,29 @@ fun EditorScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun rememberOpenDocumentLauncher(
+    onResult: (Uri) -> Unit,
+): ManagedActivityResultLauncher<Array<String>, Uri?> {
+    return rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        uri?.let(onResult)
+    }
+}
+
+@Composable
+private fun rememberCreateDocumentLauncher(
+    onResult: (Uri) -> Unit,
+    mimeType: String = PLAIN_DOCUMENT_MIME_TYPE,
+): ManagedActivityResultLauncher<String, Uri?> {
+    return rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(mimeType = mimeType),
+    ) { uri ->
+        uri?.let(onResult)
     }
 }
 
