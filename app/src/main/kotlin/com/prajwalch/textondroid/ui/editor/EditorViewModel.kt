@@ -100,12 +100,15 @@ class EditorViewModel(
             // Save Uri for later "save" operation.
             openedDocumentUri = documentUri
 
-            documentRepository.openDocument(uri = documentUri)?.let { document ->
-                _uiState.update { it.copy(title = document.title) }
-                setContent(content = document.content)
-            }
-            _uiState.update {
-                it.copy(isDocumentLoading = false, isDocumentOpened = true)
+            val document = documentRepository.openDocument(documentUri) ?: return@launch
+            setContent(content = document.content)
+
+            _uiState.update { currentUiState ->
+                EditorUiState(
+                    title = document.title,
+                    isDocumentOpened = true,
+                    settings = currentUiState.settings,
+                )
             }
 
             observeContentChange { _uiState.update { it.copy(isDirty = true) } }
