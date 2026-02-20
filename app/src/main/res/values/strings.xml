@@ -38,6 +38,7 @@
     </string>
     <string name="editor_dialog_unsaved_changes_button_confirm">Discard</string>
     <string name="editor_dialog_unsaved_changes_button_dismiss">Keep editing</string>
+    <string name="editor_file_not_exists_error">File "%1$s" no longer exists</string>
 
     <string name="settings_screen_title">Settings</string>
     <string name="settings_group_appearance">Appearance</string>

@@ -32,6 +32,7 @@ data class EditorUiState(
     val isDirty: Boolean = false,
     val isDocumentLoading: Boolean = false,
     val isDocumentOpened: Boolean = false,
+    val documentFileNotFound: Boolean = false,
     val settings: EditorSettings = EditorSettings(),
 )
 
@@ -125,11 +126,17 @@ class EditorViewModel(
         viewModelScope.launch {
             val documentUri = openedDocumentUri ?: return@launch
 
-            documentRepository.writeDocumentContent(
+            val writeSucceed = documentRepository.writeDocumentContent(
                 uri = documentUri,
                 content = getContent(),
             )
-            _uiState.update { it.copy(isDirty = false) }
+
+            if (writeSucceed) {
+                _uiState.update { it.copy(isDirty = false) }
+            } else {
+                _uiState.update { it.copy(documentFileNotFound = true) }
+                openedDocumentUri = null
+            }
         }
     }
 
@@ -145,7 +152,13 @@ class EditorViewModel(
             )
 
             val title = documentRepository.readDocumentTitle(newDocumentUri)
-            _uiState.update { it.copy(title = title, isDirty = false) }
+            _uiState.update {
+                it.copy(
+                    title = title,
+                    isDirty = false,
+                    documentFileNotFound = false,
+                )
+            }
         }
     }
 

@@ -9,6 +9,8 @@ import com.prajwalch.textondroid.domain.model.Document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import java.io.FileNotFoundException
+
 class DocumentRepository(private val contentResolver: ContentResolver) {
     private val ioDispatcher = Dispatchers.IO
 
@@ -55,13 +57,18 @@ class DocumentRepository(private val contentResolver: ContentResolver) {
         }
     }
 
-    suspend fun writeDocumentContent(uri: Uri, content: String) {
-        withContext(ioDispatcher) {
-            val bufferedWriter = contentResolver.openOutputStream(uri)?.bufferedWriter()
+    suspend fun writeDocumentContent(
+        uri: Uri,
+        content: String,
+    ): Boolean = withContext(ioDispatcher) {
+        try {
+            contentResolver.openOutputStream(uri)
+                ?.bufferedWriter()
+                ?.use { it.write(content) }
 
-            bufferedWriter?.use {
-                it.write(content)
-            }
+            true
+        } catch (_: FileNotFoundException) {
+            false
         }
     }
 }
