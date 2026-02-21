@@ -38,7 +38,12 @@
     </string>
     <string name="editor_dialog_unsaved_changes_button_confirm">Discard</string>
     <string name="editor_dialog_unsaved_changes_button_dismiss">Keep editing</string>
-    <string name="editor_file_not_exists_error">File "%1$s" no longer exists</string>
+    <string name="editor_dialog_document_file_gone_title">File deleted or moved</string>
+    <string name="editor_dialog_document_file_gone_text">
+        Document file is either deleted or moved to different location after it was opened. Do you want to create file?
+    </string>
+    <string name="editor_dialog_document_file_gone_button_create_file">Create file</string>
+    <string name="editor_dialog_document_file_gone_button_close_file">Close file</string>
 
     <string name="settings_screen_title">Settings</string>
     <string name="settings_group_appearance">Appearance</string>

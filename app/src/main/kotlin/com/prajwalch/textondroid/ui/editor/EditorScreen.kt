@@ -22,15 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,13 +36,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 import com.prajwalch.textondroid.R
 import com.prajwalch.textondroid.ui.editor.component.CreateNewFileDialog
+import com.prajwalch.textondroid.ui.editor.component.DocumentFileGoneDialog
 import com.prajwalch.textondroid.ui.editor.component.EditorScreenTopBar
 import com.prajwalch.textondroid.ui.editor.component.EditorTextField
 import com.prajwalch.textondroid.ui.editor.component.SaveAsDialog
 import com.prajwalch.textondroid.ui.editor.component.UnsavedChangesDialog
 import com.prajwalch.textondroid.ui.theme.spaces
 
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 private const val PLAIN_DOCUMENT_MIME_TYPE = "text/plain"
@@ -60,9 +55,7 @@ fun EditorScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val saveAsDocumentLauncher = rememberCreateDocumentLauncher(
-        onResult = viewModel::saveDocumentAs,
-    )
+    val saveAsDocumentLauncher = rememberCreateDocumentLauncher(viewModel::saveDocumentAs)
     var showSaveAsDialog by rememberSaveable { mutableStateOf(false) }
     if (showSaveAsDialog) {
         SaveAsDialog(
@@ -84,25 +77,11 @@ fun EditorScreen(
         )
     }
 
-    val coroutineScope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-
     if (uiState.isDocumentFileGone) {
-        val title = uiState.title ?: "Untitled"
-
-        val fileNotExistsError = stringResource(R.string.editor_file_not_exists_error, title)
-        val actionLabel = stringResource(R.string.editor_action_save_as)
-
-        coroutineScope.launch {
-            val action = snackbarHostState.showSnackbar(
-                message = fileNotExistsError,
-                actionLabel = actionLabel,
-            )
-
-            if (action == SnackbarResult.ActionPerformed) {
-                saveAsDocumentLauncher.launch(title)
-            }
-        }
+        DocumentFileGoneDialog(
+            onCreateFile = { saveAsDocumentLauncher.launch(uiState.title!!) },
+            onCloseFile = { viewModel.closeDocument() },
+        )
     }
 
     Scaffold(
@@ -136,7 +115,6 @@ fun EditorScreen(
                 enableRedo = viewModel.canRedo,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { innerPadding ->
         when {
             uiState.isDocumentLoading -> {
