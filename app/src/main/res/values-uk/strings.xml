@@ -29,4 +29,21 @@
     <string name="editor_dialog_unsaved_changes_text">Упевнені, що хочете відхилити незбережені зміни в цьому документі?</string>
     <string name="editor_dialog_unsaved_changes_button_confirm">Відхилити</string>
     <string name="editor_dialog_unsaved_changes_button_dismiss">Продовжити редагування</string>
+    <string name="theme_light">Світла</string>
+    <string name="theme_dark">Темна</string>
+    <string name="theme_follow_system">Як у системі</string>
+    <string name="editor_dialog_document_file_gone_title">Файл видалено або переміщено</string>
+    <string name="editor_dialog_document_file_gone_text">Файл документа був видалений або переміщений в інше місце після відкриття. Бажаєте створити файл?</string>
+    <string name="editor_dialog_document_file_gone_button_create_file">Створити файл</string>
+    <string name="editor_dialog_document_file_gone_button_close_file">Закрити файл</string>
+    <string name="settings_screen_title">Налаштування</string>
+    <string name="settings_group_appearance">Вигляд</string>
+    <string name="settings_enable_dynamic_theme">Увімкнути динамічну тему</string>
+    <string name="settings_enable_dynamic_theme_summary">Створює тему застосунку на основі шпалер пристрою</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_pure_black">Чисто чорна</string>
+    <string name="settings_pure_black_summary">Вмикає AMOLED тему</string>
+    <string name="settings_group_editor">Редактор</string>
+    <string name="settings_wrap_lines">Переносити рядки</string>
+    <string name="settings_wrap_lines_summary">Переносить довгі рядки на наступний рядок замість використання горизонтального гортання</string>
 </resources>
