@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.text.TextRange
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -112,6 +113,8 @@ class EditorViewModel(
     @OptIn(ExperimentalFoundationApi::class)
     val canRedo: Boolean get() = textFieldState.undoState.canRedo
 
+    private val textFinder = TextFinder(textFieldState)
+
     /**
      * A background job running content changes observer.
      *
@@ -203,6 +206,26 @@ class EditorViewModel(
         }
     }
 
+    fun findNext(term: String) {
+        val occurrence = textFinder.findNext(term) ?: return
+        val selectionRange = TextRange(
+            start = occurrence.startIndex,
+            end = occurrence.endIndex,
+        )
+
+        textFieldState.edit { selection = selectionRange }
+    }
+
+    fun findPrevious(term: String) {
+        val occurrence = textFinder.findPrevious(term) ?: return
+        val selectionRange = TextRange(
+            start = occurrence.startIndex,
+            end = occurrence.endIndex,
+        )
+
+        textFieldState.edit { selection = selectionRange }
+    }
+
     /**
      * Sets the content in [textFieldState], replacing any content that was
      * previously there, and places the cursor at the end.
@@ -243,5 +266,48 @@ class EditorViewModel(
 
     private companion object {
         private const val DOCUMENT_URI_KEY = "documentUri"
+    }
+}
+
+private class TextFinder(private val textFieldState: TextFieldState) {
+    data class Occurrence(val startIndex: Int, val endIndex: Int)
+
+    fun findNext(term: String): Occurrence? {
+        val text = getText()
+        if (text.isBlank()) return null
+
+        val (_, endIndex) = getCurrentSelectionRange()
+
+        val termStartIndex = text
+            .indexOf(term, startIndex = endIndex)
+            .takeIf { it != -1 }
+            ?: return null
+        val termEndIndex = termStartIndex + term.length
+
+        return Occurrence(termStartIndex, termEndIndex)
+    }
+
+    fun findPrevious(term: String): Occurrence? {
+        val text = getText()
+        if (text.isBlank()) return null
+
+        val (startIndex, _) = getCurrentSelectionRange()
+
+        val termStartIndex = text
+            .lastIndexOf(term, startIndex = startIndex - 1)
+            .takeIf { it != -1 }
+            ?: return null
+        val termEndIndex = termStartIndex + term.length
+
+        return Occurrence(termStartIndex, termEndIndex)
+    }
+
+    private fun getText(): CharSequence = textFieldState.text
+
+    private fun getCurrentSelectionRange(): Pair<Int, Int> {
+        if (textFieldState.selection.collapsed) return Pair(0, 0)
+
+        val currentSelectionRange = textFieldState.selection
+        return Pair(currentSelectionRange.start, currentSelectionRange.end)
     }
 }

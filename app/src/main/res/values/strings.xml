@@ -44,6 +44,7 @@
     </string>
     <string name="editor_dialog_document_file_gone_button_create_file">Create file</string>
     <string name="editor_dialog_document_file_gone_button_close_file">Close file</string>
+    <string name="editor_find_search_query_hint">Search</string>
 
     <string name="settings_screen_title">Settings</string>
     <string name="settings_group_appearance">Appearance</string>

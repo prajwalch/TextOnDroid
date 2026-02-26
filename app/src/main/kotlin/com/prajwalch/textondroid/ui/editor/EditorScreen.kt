@@ -39,14 +39,17 @@ import com.prajwalch.textondroid.ui.editor.component.CreateNewFileDialog
 import com.prajwalch.textondroid.ui.editor.component.DocumentFileGoneDialog
 import com.prajwalch.textondroid.ui.editor.component.EditorScreenTopBar
 import com.prajwalch.textondroid.ui.editor.component.EditorTextField
+import com.prajwalch.textondroid.ui.editor.component.Finder
 import com.prajwalch.textondroid.ui.editor.component.SaveAsDialog
 import com.prajwalch.textondroid.ui.editor.component.UnsavedChangesDialog
 import com.prajwalch.textondroid.ui.theme.spaces
 
+import kotlinx.coroutines.FlowPreview
 import org.koin.androidx.compose.koinViewModel
 
 private const val PLAIN_DOCUMENT_MIME_TYPE = "text/plain"
 
+@OptIn(FlowPreview::class)
 @Composable
 fun EditorScreen(
     onNavigateToSettings: () -> Unit,
@@ -84,6 +87,8 @@ fun EditorScreen(
         )
     }
 
+    var showFinder by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -107,7 +112,7 @@ fun EditorScreen(
                         viewModel.closeDocument()
                     }
                 },
-                onFind = {},
+                onFind = { showFinder = !showFinder },
                 onReplace = {},
                 onNavigateToSettings = onNavigateToSettings,
                 enableTextOperations = uiState.isDocumentOpened,
@@ -129,13 +134,20 @@ fun EditorScreen(
             }
 
             uiState.isDocumentOpened -> {
-                EditorTextField(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    state = viewModel.textFieldState,
-                    wrapLines = uiState.settings.wrapLines,
-                )
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    if (showFinder) {
+                        Finder(
+                            onFindNext = viewModel::findNext,
+                            onFindPrevious = viewModel::findPrevious,
+                            onClose = { showFinder = false },
+                        )
+                    }
+                    EditorTextField(
+                        modifier = Modifier.weight(1f),
+                        state = viewModel.textFieldState,
+                        wrapLines = uiState.settings.wrapLines,
+                    )
+                }
             }
 
             else -> {
