@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -135,7 +136,7 @@ fun EditorScreen(
 
             uiState.isDocumentOpened -> {
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    if (showFinder) {
+                    AnimatedVisibility(visible = showFinder) {
                         Finder(
                             onFindNext = viewModel::findNext,
                             onFindPrevious = viewModel::findPrevious,
