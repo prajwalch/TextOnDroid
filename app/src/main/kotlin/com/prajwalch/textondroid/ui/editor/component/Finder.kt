@@ -1,6 +1,7 @@
 package com.prajwalch.textondroid.ui.editor.component
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,7 +48,6 @@ fun Finder(
         TextField(
             modifier = Modifier.weight(1f), state = textFieldState,
             placeholder = { Text(text = stringResource(R.string.editor_find_search_query_hint)) },
-            colors = textFieldColors,
             trailingIcon = {
                 IconButton(
                     onClick = onToggleMatchCase,
@@ -60,6 +60,8 @@ fun Finder(
                     )
                 }
             },
+            lineLimits = TextFieldLineLimits.SingleLine,
+            colors = textFieldColors,
         )
 
         IconButton(onClick = { onFindPrevious(textFieldState.text.toString()) }) {
