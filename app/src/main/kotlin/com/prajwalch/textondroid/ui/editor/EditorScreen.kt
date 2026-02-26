@@ -140,6 +140,8 @@ fun EditorScreen(
                             onFindNext = viewModel::findNext,
                             onFindPrevious = viewModel::findPrevious,
                             onClose = { showFinder = false },
+                            matchCase = uiState.finderOptions.matchCase,
+                            onToggleMatchCase = viewModel::toggleMatchCase,
                         )
                     }
                     EditorTextField(

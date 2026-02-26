@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -21,8 +23,19 @@ fun Finder(
     onFindNext: (String) -> Unit,
     onFindPrevious: (String) -> Unit,
     onClose: () -> Unit,
+    matchCase: Boolean,
+    onToggleMatchCase: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val defaultIconButtonColors = IconButtonDefaults.iconButtonColors()
+    val activeIconButtonColors = defaultIconButtonColors.copy(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+    )
+    val iconButtonColors = { active: Boolean ->
+        if (active) activeIconButtonColors else defaultIconButtonColors
+    }
+
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         val textFieldState = rememberTextFieldState()
         val textFieldColors = TextFieldDefaults.colors(
@@ -35,6 +48,18 @@ fun Finder(
             modifier = Modifier.weight(1f), state = textFieldState,
             placeholder = { Text(text = stringResource(R.string.editor_find_search_query_hint)) },
             colors = textFieldColors,
+            trailingIcon = {
+                IconButton(
+                    onClick = onToggleMatchCase,
+                    colors = iconButtonColors(matchCase),
+                ) {
+                    Icon(
+                        // TODO: Use correct icon.
+                        painter = painterResource(R.drawable.ic_wrap_text),
+                        contentDescription = null,
+                    )
+                }
+            },
         )
 
         IconButton(onClick = { onFindPrevious(textFieldState.text.toString()) }) {

@@ -60,9 +60,20 @@ data class EditorUiState(
      */
     val isDocumentFileGone: Boolean = false,
     /**
+     * Finder options.
+     */
+    val finderOptions: FinderOptions = FinderOptions(),
+    /**
      * Current editor specific settings.
      */
     val settings: EditorSettings = EditorSettings(),
+)
+
+/**
+ * Finder specific options.
+ */
+data class FinderOptions(
+    val matchCase: Boolean = false,
 )
 
 /**
@@ -206,6 +217,16 @@ class EditorViewModel(
         }
     }
 
+    fun toggleMatchCase() {
+        val toggledMatchCase = !_uiState.value.finderOptions.matchCase
+
+        textFinder.matchCase = toggledMatchCase
+        _uiState.update {
+            val finderOptions = it.finderOptions.copy(matchCase = toggledMatchCase)
+            it.copy(finderOptions = finderOptions)
+        }
+    }
+
     fun findNext(term: String) {
         val occurrence = textFinder.findNext(term) ?: return
         val selectionRange = TextRange(
@@ -272,6 +293,8 @@ class EditorViewModel(
 private class TextFinder(private val textFieldState: TextFieldState) {
     data class Occurrence(val startIndex: Int, val endIndex: Int)
 
+    var matchCase = false
+
     fun findNext(term: String): Occurrence? {
         val text = getText()
         if (text.isBlank()) return null
@@ -280,7 +303,7 @@ private class TextFinder(private val textFieldState: TextFieldState) {
         val startIndex = currentSelectionRange?.second ?: 0
 
         val termStartIndex = text
-            .indexOf(term, startIndex = startIndex)
+            .indexOf(term, startIndex = startIndex, ignoreCase = !matchCase)
             .takeIf { it != -1 }
             ?: return null
         val termEndIndex = termStartIndex + term.length
@@ -296,7 +319,7 @@ private class TextFinder(private val textFieldState: TextFieldState) {
         val startIndex = currentSelectionRange?.first?.minus(1) ?: text.lastIndex
 
         val termStartIndex = text
-            .lastIndexOf(term, startIndex = startIndex)
+            .lastIndexOf(term, startIndex = startIndex, ignoreCase = !matchCase)
             .takeIf { it != -1 }
             ?: return null
         val termEndIndex = termStartIndex + term.length
