@@ -276,10 +276,11 @@ private class TextFinder(private val textFieldState: TextFieldState) {
         val text = getText()
         if (text.isBlank()) return null
 
-        val (_, endIndex) = getCurrentSelectionRange()
+        val currentSelectionRange = getCurrentSelectionRange()
+        val startIndex = currentSelectionRange?.second ?: 0
 
         val termStartIndex = text
-            .indexOf(term, startIndex = endIndex)
+            .indexOf(term, startIndex = startIndex)
             .takeIf { it != -1 }
             ?: return null
         val termEndIndex = termStartIndex + term.length
@@ -291,10 +292,11 @@ private class TextFinder(private val textFieldState: TextFieldState) {
         val text = getText()
         if (text.isBlank()) return null
 
-        val (startIndex, _) = getCurrentSelectionRange()
+        val currentSelectionRange = getCurrentSelectionRange()
+        val startIndex = currentSelectionRange?.first?.minus(1) ?: text.lastIndex
 
         val termStartIndex = text
-            .lastIndexOf(term, startIndex = startIndex - 1)
+            .lastIndexOf(term, startIndex = startIndex)
             .takeIf { it != -1 }
             ?: return null
         val termEndIndex = termStartIndex + term.length
@@ -304,8 +306,8 @@ private class TextFinder(private val textFieldState: TextFieldState) {
 
     private fun getText(): CharSequence = textFieldState.text
 
-    private fun getCurrentSelectionRange(): Pair<Int, Int> {
-        if (textFieldState.selection.collapsed) return Pair(0, 0)
+    private fun getCurrentSelectionRange(): Pair<Int, Int>? {
+        if (textFieldState.selection.collapsed) return null
 
         val currentSelectionRange = textFieldState.selection
         return Pair(currentSelectionRange.start, currentSelectionRange.end)
