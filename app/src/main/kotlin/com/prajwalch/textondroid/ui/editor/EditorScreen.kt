@@ -113,7 +113,7 @@ fun EditorScreen(
                         viewModel.closeDocument()
                     }
                 },
-                onFind = { showFinder = !showFinder },
+                onFind = { showFinder = true },
                 onReplace = {},
                 onNavigateToSettings = onNavigateToSettings,
                 enableTextOperations = uiState.isDocumentOpened,
@@ -138,11 +138,16 @@ fun EditorScreen(
                 Column(modifier = Modifier.padding(innerPadding)) {
                     AnimatedVisibility(visible = showFinder) {
                         Finder(
-                            onFindNext = viewModel::findNext,
-                            onFindPrevious = viewModel::findPrevious,
                             onClose = { showFinder = false },
+                            onFind = viewModel::findAllOccurrences,
+                            onSelectNextOccurrence = viewModel::selectNextOccurrence,
+                            onSelectPreviousOccurrence = viewModel::selectPreviousOccurrence,
+//                            onReplace = viewModel::replace,
+//                            onReplaceAll = viewModel::replaceAll,
                             matchCase = uiState.finderOptions.matchCase,
                             onToggleMatchCase = viewModel::toggleMatchCase,
+//                            showReplaceField = showReplaceField,
+//                            onToggleReplaceField = { showReplaceField = !showReplaceField },
                         )
                     }
                     EditorTextField(

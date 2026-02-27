@@ -124,7 +124,10 @@ class EditorViewModel(
     @OptIn(ExperimentalFoundationApi::class)
     val canRedo: Boolean get() = textFieldState.undoState.canRedo
 
-    private val textFinder = TextFinder(textFieldState)
+    /**
+     * A text finder.
+     */
+    private val textFinder = TextFinder()
 
     /**
      * A background job running content changes observer.
@@ -217,6 +220,29 @@ class EditorViewModel(
         }
     }
 
+    /** Finds the all occurrences of given term. */
+    fun findAllOccurrences(term: String) {
+        textFinder.findAllOccurrences(haystack = getContent(), needle = term)
+        selectNextOccurrence()
+    }
+
+    /** Makes selection to next occurrence. */
+    fun selectNextOccurrence() {
+        val nextOccurrence = textFinder.getNextOccurrence() ?: return
+        val selectionRange = TextRange(nextOccurrence.startIndex, nextOccurrence.endIndex)
+
+        textFieldState.edit { selection = selectionRange }
+    }
+
+    /** Makes selection to previous occurrence. */
+    fun selectPreviousOccurrence() {
+        val previousOccurrence = textFinder.getPreviousOccurrence() ?: return
+        val selectionRange = TextRange(previousOccurrence.startIndex, previousOccurrence.endIndex)
+
+        textFieldState.edit { selection = selectionRange }
+    }
+
+    /** Enables or disables the match case option for find operation. */
     fun toggleMatchCase() {
         val toggledMatchCase = !_uiState.value.finderOptions.matchCase
 
@@ -225,26 +251,6 @@ class EditorViewModel(
             val finderOptions = it.finderOptions.copy(matchCase = toggledMatchCase)
             it.copy(finderOptions = finderOptions)
         }
-    }
-
-    fun findNext(term: String) {
-        val occurrence = textFinder.findNext(term) ?: return
-        val selectionRange = TextRange(
-            start = occurrence.startIndex,
-            end = occurrence.endIndex,
-        )
-
-        textFieldState.edit { selection = selectionRange }
-    }
-
-    fun findPrevious(term: String) {
-        val occurrence = textFinder.findPrevious(term) ?: return
-        val selectionRange = TextRange(
-            start = occurrence.startIndex,
-            end = occurrence.endIndex,
-        )
-
-        textFieldState.edit { selection = selectionRange }
     }
 
     /**
@@ -290,49 +296,87 @@ class EditorViewModel(
     }
 }
 
-private class TextFinder(private val textFieldState: TextFieldState) {
+private class TextFinder {
     data class Occurrence(val startIndex: Int, val endIndex: Int)
+
+    private val currentOccurrences = mutableListOf<Occurrence>()
+    private var currentLookupIndex: Int? = null
 
     var matchCase = false
 
-    fun findNext(term: String): Occurrence? {
-        val text = getText()
-        if (text.isBlank()) return null
+    fun findAllOccurrences(haystack: String, needle: String): Boolean {
+        reset()
+        if (haystack.isBlank()) return false
 
-        val currentSelectionRange = getCurrentSelectionRange()
-        val startIndex = currentSelectionRange?.second ?: 0
+        var nextStartIndex: Int? = 0
+        while (nextStartIndex != null) {
+            val termStartIndex = haystack
+                .indexOf(needle, startIndex = nextStartIndex, ignoreCase = !matchCase)
+                .takeIf { it != -1 }
 
-        val termStartIndex = text
-            .indexOf(term, startIndex = startIndex, ignoreCase = !matchCase)
-            .takeIf { it != -1 }
-            ?: return null
-        val termEndIndex = termStartIndex + term.length
+            if (termStartIndex == null) {
+                nextStartIndex = null
+                continue
+            }
 
-        return Occurrence(termStartIndex, termEndIndex)
+            val termEndIndex = termStartIndex + needle.length
+            currentOccurrences.add(Occurrence(termStartIndex, termEndIndex))
+
+            nextStartIndex = termEndIndex
+        }
+
+        return currentOccurrences.isEmpty()
     }
 
-    fun findPrevious(term: String): Occurrence? {
-        val text = getText()
-        if (text.isBlank()) return null
-
-        val currentSelectionRange = getCurrentSelectionRange()
-        val startIndex = currentSelectionRange?.first?.minus(1) ?: text.lastIndex
-
-        val termStartIndex = text
-            .lastIndexOf(term, startIndex = startIndex, ignoreCase = !matchCase)
-            .takeIf { it != -1 }
-            ?: return null
-        val termEndIndex = termStartIndex + term.length
-
-        return Occurrence(termStartIndex, termEndIndex)
+    fun reset() {
+        currentOccurrences.clear()
+        currentLookupIndex = null
     }
 
-    private fun getText(): CharSequence = textFieldState.text
+    fun getNextOccurrence(): Occurrence? {
+        val nextLookupIndex = getNextLookupIndex() ?: return null
 
-    private fun getCurrentSelectionRange(): Pair<Int, Int>? {
-        if (textFieldState.selection.collapsed) return null
+        val nextOccurrence = currentOccurrences.getOrNull(nextLookupIndex)
+        // Update lookup index.
+        currentLookupIndex = nextLookupIndex
 
-        val currentSelectionRange = textFieldState.selection
-        return Pair(currentSelectionRange.start, currentSelectionRange.end)
+        return nextOccurrence
     }
+
+    private fun getNextLookupIndex(): Int? {
+        if (!isLookupPossible()) return null
+
+        return when (val currentLookupIndex = currentLookupIndex) {
+            // Start the lookup if not started yet.
+            null -> 0
+            // Restart if we're at the end.
+            currentOccurrences.lastIndex -> 0
+            // Otherwise increment.
+            else -> currentLookupIndex + 1
+        }
+    }
+
+    fun getPreviousOccurrence(): Occurrence? {
+        val previousLookupIndex = getPreviousLookupIndex() ?: return null
+
+        val previousOccurrence = currentOccurrences.getOrNull(previousLookupIndex)
+        currentLookupIndex = previousLookupIndex
+
+        return previousOccurrence
+    }
+
+    private fun getPreviousLookupIndex(): Int? {
+        if (!isLookupPossible()) return null
+
+        return when (val currentLookupIndex = currentLookupIndex) {
+            // Start the lookup from the last if it hasn't started yet.
+            null -> currentOccurrences.lastIndex
+            // Restart from last if we're already at the start.
+            0 -> currentOccurrences.lastIndex
+            // Otherwise decrement.
+            else -> currentLookupIndex - 1
+        }
+    }
+
+    private fun isLookupPossible() = currentOccurrences.isNotEmpty()
 }
