@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import java.util.Collections
+
 /**
  * Represents editor UI specific state.
  */
@@ -242,6 +244,27 @@ class EditorViewModel(
         textFieldState.edit { selection = selectionRange }
     }
 
+    /** Replaces the currently selected occurrence with the given term. */
+    fun replaceSelectedOccurrence(newTerm: String) {
+        val currentOccurrence = textFinder.getCurrentOccurrence() ?: return
+        textFieldState.edit {
+            replace(
+                start = currentOccurrence.startIndex,
+                end = currentOccurrence.endIndex,
+                text = newTerm,
+            )
+        }
+    }
+
+    /** Replaces all occurrences with the given term. */
+    fun replaceAllOccurrences(newTerm: String) {
+        textFinder.getAllOccurrences()?.forEach { occurrence ->
+            textFieldState.edit {
+                replace(occurrence.startIndex, occurrence.endIndex, newTerm)
+            }
+        }
+    }
+
     /** Enables or disables the match case option for find operation. */
     fun toggleMatchCase() {
         val toggledMatchCase = !_uiState.value.finderOptions.matchCase
@@ -331,6 +354,15 @@ private class TextFinder {
     fun reset() {
         currentOccurrences.clear()
         currentLookupIndex = null
+    }
+
+    fun getAllOccurrences(): List<Occurrence>? {
+        if (!isLookupPossible()) return null
+        return Collections.unmodifiableList(currentOccurrences)
+    }
+
+    fun getCurrentOccurrence(): Occurrence? {
+        return currentLookupIndex?.let(currentOccurrences::getOrNull)
     }
 
     fun getNextOccurrence(): Occurrence? {

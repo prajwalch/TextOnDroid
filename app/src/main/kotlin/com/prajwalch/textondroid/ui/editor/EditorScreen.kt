@@ -88,7 +88,8 @@ fun EditorScreen(
         )
     }
 
-    var showFinder by rememberSaveable { mutableStateOf(false) }
+    var showFindField by rememberSaveable { mutableStateOf(false) }
+    var showReplaceField by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -113,8 +114,8 @@ fun EditorScreen(
                         viewModel.closeDocument()
                     }
                 },
-                onFind = { showFinder = true },
-                onReplace = {},
+                onFind = { showFindField = true; showReplaceField = false },
+                onReplace = { showFindField = true; showReplaceField = true },
                 onNavigateToSettings = onNavigateToSettings,
                 enableTextOperations = uiState.isDocumentOpened,
                 enableUndo = viewModel.canUndo,
@@ -136,18 +137,18 @@ fun EditorScreen(
 
             uiState.isDocumentOpened -> {
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    AnimatedVisibility(visible = showFinder) {
+                    AnimatedVisibility(visible = showFindField) {
                         Finder(
-                            onClose = { showFinder = false },
+                            onClose = { showFindField = false; showReplaceField = false },
                             onFind = viewModel::findAllOccurrences,
                             onSelectNextOccurrence = viewModel::selectNextOccurrence,
                             onSelectPreviousOccurrence = viewModel::selectPreviousOccurrence,
-//                            onReplace = viewModel::replace,
-//                            onReplaceAll = viewModel::replaceAll,
+                            onReplace = viewModel::replaceSelectedOccurrence,
+                            onReplaceAll = viewModel::replaceAllOccurrences,
                             matchCase = uiState.finderOptions.matchCase,
                             onToggleMatchCase = viewModel::toggleMatchCase,
-//                            showReplaceField = showReplaceField,
-//                            onToggleReplaceField = { showReplaceField = !showReplaceField },
+                            showReplaceField = showReplaceField,
+                            onToggleReplaceField = { showReplaceField = !showReplaceField },
                         )
                     }
                     EditorTextField(

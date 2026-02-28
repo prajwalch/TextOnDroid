@@ -1,5 +1,6 @@
 package com.prajwalch.textondroid.ui.editor.component
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,27 +31,27 @@ fun Finder(
     onFind: (String) -> Unit,
     onSelectNextOccurrence: () -> Unit,
     onSelectPreviousOccurrence: () -> Unit,
-//    onReplace: (String) -> Unit,
-//    onReplaceAll: (String) -> Unit,
+    onReplace: (String) -> Unit,
+    onReplaceAll: (String) -> Unit,
     matchCase: Boolean,
     onToggleMatchCase: () -> Unit,
-//    showReplaceField: Boolean,
-//    onToggleReplaceField: () -> Unit,
+    showReplaceField: Boolean,
+    onToggleReplaceField: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(modifier = modifier) {
-//        val replaceFieldToggleIcon = if (showReplaceField) {
-//            R.drawable.ic_keyboard_arrow_up
-//        } else {
-//            R.drawable.ic_keyboard_arrow_down
-//        }
-//
-//        IconButton(onClick = onToggleReplaceField) {
-//            Icon(
-//                painter = painterResource(replaceFieldToggleIcon),
-//                contentDescription = null,
-//            )
-//        }
+        val replaceFieldToggleIcon = if (showReplaceField) {
+            R.drawable.ic_keyboard_arrow_up
+        } else {
+            R.drawable.ic_keyboard_arrow_down
+        }
+
+        IconButton(onClick = onToggleReplaceField) {
+            Icon(
+                painter = painterResource(replaceFieldToggleIcon),
+                contentDescription = null,
+            )
+        }
 
         Column(
             modifier = Modifier.weight(1f),
@@ -64,12 +65,12 @@ fun Finder(
                 matchCase = matchCase,
                 onToggleMatchCase = onToggleMatchCase,
             )
-//            AnimatedVisibility(visible = showReplaceField) {
-//                ReplaceField(
-//                    onReplace = onReplace,
-//                    onReplaceAll = onReplaceAll,
-//                )
-//            }
+            AnimatedVisibility(visible = showReplaceField) {
+                ReplaceField(
+                    onReplace = onReplace,
+                    onReplaceAll = onReplaceAll,
+                )
+            }
         }
     }
 }
@@ -140,33 +141,34 @@ private fun FindField(
     }
 }
 
-//@Composable
-//private fun ReplaceField(
-//    onReplace: (String) -> Unit,
-//    onReplaceAll: (String) -> Unit,
-//    modifier: Modifier = Modifier,
-//) {
-//    val textFieldState = rememberTextFieldState()
-//
-//    Row(modifier = modifier, horizontalArrangement = Arrangement.Center) {
-//        FinderTextField(
-//            modifier = Modifier.weight(1f),
-//            state = textFieldState,
-//        )
-//        IconButton(onClick = { onReplace(textFieldState.text.toString()) }) {
-//            Icon(
-//                painter = painterResource(R.drawable.ic_repeat_one),
-//                contentDescription = null,
-//            )
-//        }
-//        IconButton(onClick = { onReplaceAll(textFieldState.text.toString()) }) {
-//            Icon(
-//                painter = painterResource(R.drawable.ic_arrow_downward),
-//                contentDescription = null,
-//            )
-//        }
-//    }
-//}
+@Composable
+private fun ReplaceField(
+    onReplace: (String) -> Unit,
+    onReplaceAll: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val textFieldState = rememberTextFieldState()
+
+    Row(modifier = modifier, horizontalArrangement = Arrangement.Center) {
+        FinderTextField(
+            modifier = Modifier.weight(1f),
+            state = textFieldState,
+            placeholder = { Text(text = stringResource(R.string.editor_replace_query_hint)) },
+        )
+        IconButton(onClick = { onReplace(textFieldState.text.toString()) }) {
+            Icon(
+                painter = painterResource(R.drawable.ic_replace),
+                contentDescription = null,
+            )
+        }
+        IconButton(onClick = { onReplaceAll(textFieldState.text.toString()) }) {
+            Icon(
+                painter = painterResource(R.drawable.ic_replace_all),
+                contentDescription = null,
+            )
+        }
+    }
+}
 
 @Composable
 private fun FinderTextField(
