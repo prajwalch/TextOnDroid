@@ -46,4 +46,6 @@
     <string name="settings_group_editor">Редактор</string>
     <string name="settings_wrap_lines">Переносити рядки</string>
     <string name="settings_wrap_lines_summary">Переносить довгі рядки на наступний рядок замість використання горизонтального гортання</string>
+    <string name="editor_find_search_query_hint">Пошук</string>
+    <string name="editor_replace_query_hint">Замінити</string>
 </resources>
